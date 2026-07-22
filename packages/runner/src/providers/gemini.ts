@@ -19,9 +19,16 @@ function extractJson(text: string): unknown {
   return JSON.parse(candidate.slice(start, end + 1));
 }
 
+// ponytail: gemini-cli가 기본으로 고르는 프리뷰 모델(gemini-3-flash 등)은
+// 무료 티어 쿼터가 극단적으로 낮다(하루 5회 수준). 안정된 구버전 모델이
+// 무료 쿼터가 더 넉넉해서 기본값으로 쓴다. GEMINI_MODEL로 언제든 바꿀 수 있음 —
+// 계속 쿼터가 부족하면 이 값을 조정하는 게 실질적인 해결책.
+const DEFAULT_MODEL = "gemini-2.0-flash";
+
 /** Google Gemini CLI. GEMINI_API_KEY 환경변수만 있으면 별도 로그인 없이 인증된다. */
 export const geminiProvider: AnalysisProvider = {
   async run(prompt: string, repositoryPath: string): Promise<unknown> {
+    const model = process.env.GEMINI_MODEL || DEFAULT_MODEL;
     const { stdout } = await execFileAsync(
       "npx",
       [
@@ -29,6 +36,8 @@ export const geminiProvider: AnalysisProvider = {
         "@google/gemini-cli",
         "-p",
         prompt,
+        "-m",
+        model,
         "--approval-mode",
         "plan",
         // GitHub Actions처럼 매번 새로 checkout되는 폴더는 Gemini CLI의
