@@ -90,6 +90,19 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
     }
   }
 
+  async function handleDelete() {
+    if (!window.confirm("이 이슈를 삭제할까요?")) return;
+    try {
+      const res = await fetch(`/api/issues/${issue.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error((await res.json()).error);
+      router.push("/issues");
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "삭제 중 오류가 발생했습니다.",
+      );
+    }
+  }
+
   async function handleCopy() {
     const text = analysisResult
       ? [
@@ -169,6 +182,13 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
             실행 로그 확인
           </a>
         )}
+        <button
+          type="button"
+          onClick={handleDelete}
+          className="inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600/10 dark:text-red-400 dark:hover:bg-red-950"
+        >
+          삭제
+        </button>
       </div>
 
       <section className={`${cardClass} flex flex-col gap-5`}>
