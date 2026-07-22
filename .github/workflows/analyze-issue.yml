@@ -69,3 +69,18 @@ jobs:
           ANALYSIS_PROVIDER: gemini
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: pnpm --filter runner start
+
+      # packages/runner 실행 전(App 토큰 발급, 대상 저장소 checkout 등) 단계에서
+      # 실패하면 runner가 아예 못 떠서 콜백을 못 보낸다 — 그 경우 QUEUED에 영원히
+      # 멈추므로, 이 job의 어느 단계든 실패하면 여기서 직접 FAILED 콜백을 보낸다.
+      - name: Report workflow failure to Tria
+        if: failure()
+        run: |
+          curl -sf -X POST "${{ github.event.client_payload.callbackUrl }}" \
+            -H "Authorization: Bearer ${{ secrets.CALLBACK_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "analysisRunId": "${{ github.event.client_payload.analysisRunId }}",
+              "status": "FAILED",
+              "failureReason": "GitHub Actions 워크플로 실패: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }'
