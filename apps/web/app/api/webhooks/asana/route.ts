@@ -97,12 +97,10 @@ export async function POST(request: Request) {
         asana_project_value: string;
       }[];
 
+      // asana_project_value는 항상 프로젝트 GID다 (이름은 바뀔 수 있어 매칭에 쓰지 않는다).
       const projectKey =
-        configs.find(
-          (c) =>
-            task.projectGids.includes(c.asana_project_value) ||
-            task.projectNames.includes(c.asana_project_value)
-        )?.key ?? null;
+        configs.find((c) => task.projectGids.includes(c.asana_project_value))
+          ?.key ?? null;
 
       // issues.project_key는 NOT NULL — 지원되는 프로젝트가 아니면 동기화하지 않는다 (문서 5.2).
       if (!projectKey) {

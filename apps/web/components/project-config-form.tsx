@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { ProjectConfig } from "./mock-data";
 
 type RepoOption = { owner: string; repo: string };
+type AsanaProjectOption = { gid: string; name: string };
 
 type Props = {
   initialProjects: ProjectConfig[];
@@ -25,6 +26,9 @@ export function ProjectConfigForm({ initialProjects }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [repoOptions, setRepoOptions] = useState<RepoOption[]>([]);
+  const [asanaProjectOptions, setAsanaProjectOptions] = useState<
+    AsanaProjectOption[]
+  >([]);
 
   useEffect(() => {
     fetch("/api/github/available-repos")
@@ -33,6 +37,13 @@ export function ProjectConfigForm({ initialProjects }: Props) {
         setRepoOptions(data.repositories ?? []),
       )
       .catch(() => setRepoOptions([]));
+
+    fetch("/api/asana/available-projects")
+      .then((res) => res.json())
+      .then((data: { projects?: AsanaProjectOption[] }) =>
+        setAsanaProjectOptions(data.projects ?? []),
+      )
+      .catch(() => setAsanaProjectOptions([]));
   }, []);
 
   function handleRepoSelect(value: string) {
@@ -140,11 +151,15 @@ export function ProjectConfigForm({ initialProjects }: Props) {
           )}
         </div>
 
+        <p className="text-xs text-zinc-500">
+          여기 등록한다고 자동으로 이벤트가 오지 않습니다. Asana 프로젝트
+          GID로 웹훅을 별도로 등록해야 실제로 연결됩니다.
+        </p>
+
         {(
           [
             ["key", "프로젝트 키", "classroom"],
             ["name", "표시 이름", "Classroom"],
-            ["asanaProjectValue", "Asana 프로젝트 값", "Classroom 이슈"],
             ["defaultRef", "기본 브랜치", "main"],
           ] as const
         ).map(([field, label, placeholder]) => (
@@ -166,6 +181,53 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             />
           </div>
         ))}
+
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="asanaProject"
+            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+          >
+            Asana 프로젝트
+          </label>
+          {asanaProjectOptions.length > 0 ? (
+            <select
+              id="asanaProject"
+              value={form.asanaProjectValue}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  asanaProjectValue: e.target.value,
+                }))
+              }
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            >
+              <option value="">선택하세요</option>
+              {asanaProjectOptions.map(({ gid, name }) => (
+                <option key={gid} value={gid}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <>
+              <p className="text-xs text-zinc-500">
+                프로젝트 목록을 못 불러와서 GID 직접 입력으로 대체합니다.
+              </p>
+              <input
+                id="asanaProject"
+                value={form.asanaProjectValue}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    asanaProjectValue: e.target.value,
+                  }))
+                }
+                placeholder="1216772744613005"
+                className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              />
+            </>
+          )}
+        </div>
 
         <div className="flex flex-col gap-1">
           <label

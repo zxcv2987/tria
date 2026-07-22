@@ -18,7 +18,7 @@ type AsanaTaskData = {
   permalink_url?: string;
   modified_at?: string;
   custom_fields?: AsanaCustomField[];
-  projects?: { gid: string; name: string }[];
+  projects?: { gid: string }[];
 };
 
 export type AsanaTaskDetails = {
@@ -29,7 +29,6 @@ export type AsanaTaskDetails = {
   modifiedAt: string;
   asanaStatus: string;
   projectGids: string[];
-  projectNames: string[];
 };
 
 function pickAsanaStatus(fields: AsanaCustomField[] | undefined): string {
@@ -61,7 +60,6 @@ export async function fetchAsanaTaskDetails(
     "custom_fields.display_value",
     "custom_fields.enum_value.name",
     "projects.gid",
-    "projects.name",
   ].join(",");
 
   const res = await fetch(
@@ -85,7 +83,6 @@ export async function fetchAsanaTaskDetails(
     modifiedAt: data.modified_at ?? new Date().toISOString(),
     asanaStatus: pickAsanaStatus(data.custom_fields),
     projectGids: (data.projects ?? []).map((p) => p.gid),
-    projectNames: (data.projects ?? []).map((p) => p.name),
   };
 }
 
