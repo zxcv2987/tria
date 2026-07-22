@@ -199,7 +199,59 @@ Asana 요약 댓글과 상태 갱신
 
 # 7. 시스템 구성
 
+Tria 운영형은 웹 애플리케이션과 GitHub Actions Runner 코드를 하나의 저장소에서 관리하는 pnpm workspace 기반 모노레포로 구성한다.
+
+웹 애플리케이션만 별도의 실행 환경에 배포하며, Runner는 상시 서버로 배포하지 않고 GitHub Actions 실행 시 사용한다.
+
+```text
+tria/
+├─ apps/
+│  └─ web/                         # 배포되는 Next.js 애플리케이션
+│
+├─ packages/
+│  ├─ analysis/                    # 웹과 Runner가 공유하는 분석 계약
+│  │  └─ src/
+│  │     ├─ schema.ts
+│  │     ├─ types.ts
+│  │     ├─ callback-schema.ts
+│  │     └─ validate-result.ts
+│  │
+│  └─ runner/                      # GitHub Actions 분석 실행 코드
+│     ├─ src/
+│     │  ├─ build-prompt.ts
+│     │  ├─ validate-evidence.ts
+│     │  └─ send-callback.ts
+│     ├─ prompts/
+│     │  └─ analyze-issue.md
+│     └─ package.json
+│
+├─ .github/
+│  └─ workflows/
+│     └─ analyze-issue.yml
+│
+├─ package.json
+├─ pnpm-workspace.yaml
+├─ pnpm-lock.yaml
+└─ tsconfig.base.json
+```
+
+초기 운영형에서는 pnpm workspace만 사용한다.
+
+Turborepo는 다음 조건이 생길 때 도입을 검토한다.
+
+* 배포 애플리케이션이 여러 개로 증가
+* 공유 패키지가 증가
+* 전체 빌드, 테스트, 타입 검사 시간이 길어짐
+* 변경되지 않은 패키지의 작업을 생략해야 함
+* CI 캐시 최적화가 필요함
+
 ## 7.1 Tria Web
+
+경로:
+
+```text
+apps/web
+```
 
 기술:
 
@@ -211,33 +263,118 @@ Asana 요약 댓글과 상태 갱신
 담당 역할:
 
 * Asana 웹훅 수신
-* 이슈 동기화
-* 분석 작업 생성
+* 최신 Asana 이슈 동기화
+* 분석 실행 생성
 * GitHub Actions 실행 요청
-* 분석 결과 callback 수신
-* 이슈 목록 및 상세 화면
+* 분석 결과 Callback 수신
+* 분석 결과 검증 및 저장
+* 이슈 목록과 상세 화면
 * 재분석 기능
-* Asana 댓글과 상태 변경
+* Asana 댓글 및 상태 변경
 * 프로젝트 설정 관리
 
-## 7.2 Tria Runner
+Tria Web은 저장소 checkout이나 Codex 실행을 직접 수행하지 않는다.
 
-별도 GitHub 저장소:
+웹 배포 플랫폼에서는 `apps/web`을 애플리케이션 루트로 지정한다.
+
+## 7.2 Analysis 공통 패키지
+
+경로:
 
 ```text
-tria-runner
+packages/analysis
 ```
+
+웹 애플리케이션과 Runner가 공유하는 분석 계약을 관리한다.
+
+포함 항목:
+
+* `AnalysisResult` 타입
+* 분석 결과 Zod Schema 또는 JSON Schema
+* Callback 요청 및 응답 스키마
+* 분석 상태와 결과 상태
+* 프로젝트 설정 타입
+* 결과 검증 규칙
+
+사용 위치:
+
+```text
+GitHub Actions Runner
+→ Codex가 생성한 결과 검증
+
+Tria Callback API
+→ 전달받은 결과 재검증
+
+Tria Web UI
+→ 동일한 타입으로 결과 렌더링
+```
+
+Runner와 Web은 반드시 같은 분석 스키마 버전을 사용한다.
+
+## 7.3 Tria Runner
+
+경로:
+
+```text
+packages/runner
+```
+
+Tria Runner는 별도 GitHub 저장소 또는 별도 상시 서버가 아니다.
+
+Tria 저장소에 포함된 실행 코드이며, 같은 저장소의 GitHub Actions가 시작될 때만 실행한다.
 
 담당 역할:
 
-* `repository_dispatch` 수신
-* 대상 저장소 인증
-* 대상 저장소 checkout
-* Codex CLI 실행
-* 결과 JSON 검증
+* GitHub Actions payload 검증
+* 이슈 분석 프롬프트 생성
+* 대상 저장소 checkout 이후 Codex 실행 준비
+* Codex 결과 JSON 파싱
+* 실제 파일 경로 검증
+* 분석 결과 판정 보정
 * Tria Callback API 호출
+* 실패 결과 전송
 
-## 7.3 대상 저장소
+Runner가 사용하는 프롬프트와 분석 스키마는 Tria 웹 코드와 함께 버전 관리한다.
+
+## 7.4 GitHub Actions
+
+워크플로 경로:
+
+```text
+.github/workflows/analyze-issue.yml
+```
+
+실행 흐름:
+
+```text
+Tria Web
+→ Tria 저장소 repository_dispatch
+→ Tria 저장소 GitHub Actions 실행
+→ Tria 저장소 checkout
+→ 대상 저장소 인증
+→ 대상 저장소를 target/에 checkout
+→ packages/runner 실행
+→ Codex 분석
+→ 결과 검증
+→ Tria Callback API 호출
+```
+
+GitHub Actions 작업 공간은 다음과 같이 구성한다.
+
+```text
+GITHUB_WORKSPACE/
+├─ tria/                           # Tria 자체 코드
+│  ├─ packages/analysis
+│  └─ packages/runner
+│
+└─ target/                         # 분석 대상 저장소
+   ├─ src/
+   └─ package.json
+```
+
+대상 저장소에는 Tria 전용 워크플로 또는 분석 코드를 추가하지 않는다.
+
+## 7.5 대상 저장소
 
 예시:
 
@@ -245,11 +382,28 @@ tria-runner
 * learner-web
 * backend-api
 
-대상 저장소에는 Tria 전용 워크플로를 넣지 않는다.
+대상 저장소는 Tria 서버에서 관리하는 허용 목록을 통해서만 선택한다.
 
-Tria Runner가 런타임에 대상 저장소를 checkout한다.
+```ts
+const repositoryMap = {
+  admin: {
+    owner: "company",
+    repository: "admin-web",
+    ref: "develop",
+  },
+  learner: {
+    owner: "company",
+    repository: "learner-web",
+    ref: "main",
+  },
+} as const;
+```
 
-## 7.4 데이터베이스
+Asana 사용자 입력이나 GitHub Actions payload에서 임의 저장소 주소를 직접 지정할 수 없게 한다.
+
+대상 저장소는 GitHub App 설치 토큰을 사용해 `target/` 디렉터리에 checkout한다.
+
+## 7.6 데이터베이스
 
 저장 대상:
 
@@ -258,7 +412,9 @@ Tria Runner가 런타임에 대상 저장소를 checkout한다.
 * 분석 결과
 * 프로젝트 설정
 * 분석 피드백
-* 상태 변경 및 실패 정보
+* 분석 상태
+* 실패 정보
+* 대상 저장소 및 분석 커밋 SHA
 
 ---
 
@@ -643,14 +799,16 @@ POST /api/analysis/[runId]/status
 
 ```text
 repository_dispatch
-→ Tria Runner checkout
-→ GitHub App 토큰 생성
+→ Tria 저장소 checkout
+→ pnpm 의존성 설치
+→ GitHub App 설치 토큰 생성
 → 대상 저장소를 target/에 checkout
-→ 이슈 프롬프트 생성
+→ packages/runner에서 분석 프롬프트 생성
 → Codex 실행
 → analysis.json 생성
-→ 파일 경로 검증
-→ Tria callback
+→ packages/analysis 스키마로 결과 검증
+→ 실제 파일 경로 검증
+→ Tria Callback API 호출
 ```
 
 Payload 예시:
@@ -658,15 +816,20 @@ Payload 예시:
 ```json
 {
   "analysisRunId": "run_123",
-  "repository": "company/admin-web",
+  "projectKey": "admin",
+  "repositoryName": "admin-web",
   "ref": "develop",
   "issueTitle": "담당자 변경 후 목록 미반영",
-  "issueBody": "강의 담당자를 변경했지만 목록에는...",
+  "issueBody": "강의 담당자를 변경했지만 목록에는 반영되지 않습니다.",
   "callbackUrl": "https://tria.company.com/api/analysis/callback"
 }
 ```
 
-저장소 값은 사용자 입력이 아니라 Tria 서버의 허용 목록에서 선택한다.
+`repositoryName`과 `ref`는 Tria 서버의 프로젝트 설정에서 선택한다.
+
+사용자가 입력한 GitHub 저장소 주소를 payload에 그대로 전달하지 않는다.
+
+GitHub Actions는 프로젝트 설정과 GitHub App 설치 범위가 일치하는지 확인한 후 checkout을 수행한다.
 
 ---
 
@@ -915,3 +1078,101 @@ Asana 이슈 작성
 다음 상태를 만드는 것이 성공이다.
 
 > 개발자가 이슈를 확인하는 시점에 관련 코드와 조사 방향, 추가 확인 항목이 이미 준비돼 있다.
+
+---
+
+# 23. 운영형 전환 절차
+
+MVP가 완료된 뒤 다음 순서로 운영형 구조로 전환한다.
+
+## 1단계: pnpm workspace 구성
+
+```yaml
+packages:
+  - "apps/*"
+  - "packages/*"
+```
+
+현재 Next.js 프로젝트를 `apps/web`으로 이동한다.
+
+이 단계에서는 기존 기능을 변경하지 않는다.
+
+## 2단계: 공통 분석 계약 분리
+
+현재 Next.js 프로젝트에 있는 다음 코드를 `packages/analysis`로 이동한다.
+
+* 분석 결과 타입
+* 분석 결과 스키마
+* 상태값
+* 결과 검증 함수
+
+## 3단계: 로컬 Codex 실행 코드 분리
+
+다음 코드를 `packages/runner`로 이동한다.
+
+* 프롬프트 생성
+* Codex 실행 입력 생성
+* 결과 파일 파싱
+* 파일 존재 여부 검증
+* 판정 보정
+
+## 4단계: GitHub Actions 추가
+
+Tria 저장소에 다음 워크플로를 추가한다.
+
+```text
+.github/workflows/analyze-issue.yml
+```
+
+워크플로는 Tria 자체 저장소와 분석 대상 저장소를 각각 checkout한다.
+
+## 5단계: 실행 방식을 비동기로 변경
+
+```text
+MVP
+Next.js API
+→ 로컬 Codex 실행
+→ HTTP 응답으로 결과 반환
+
+운영형
+Next.js API
+→ AnalysisRun 생성
+→ GitHub Actions 실행
+→ 즉시 QUEUED 응답
+→ Callback으로 결과 수신
+```
+
+## 6단계: 웹 배포 범위 지정
+
+웹 배포 플랫폼의 애플리케이션 루트를 다음으로 설정한다.
+
+```text
+apps/web
+```
+
+GitHub Actions 워크플로와 Runner 패키지는 웹 서버로 별도 배포하지 않는다.
+
+---
+
+# 24. 운영형 저장소 구성 결정
+
+Tria의 초기 운영형은 다음 구성을 기본으로 한다.
+
+```text
+단일 GitHub 저장소
++ pnpm workspace
++ apps/web
++ packages/analysis
++ packages/runner
++ 동일 저장소 GitHub Actions
+```
+
+Runner는 웹과 다른 실행 환경을 사용하지만, 별도의 저장소로 분리하지 않는다.
+
+향후 다음 조건이 발생할 때만 Runner 저장소 분리를 검토한다.
+
+* Runner와 Web의 관리 조직이 달라짐
+* 분석용 Secret을 저장소 수준에서 격리해야 함
+* 여러 서비스가 동일 Runner를 공통으로 사용함
+* 웹과 분석 파이프라인의 배포 주기가 완전히 달라짐
+* 보안 정책상 GitHub Actions 코드와 제품 코드를 분리해야 함
