@@ -70,29 +70,51 @@ export function ProjectConfigForm({ initialProjects }: Props) {
     });
   }
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!form.key.trim() || !form.name.trim()) return;
 
-    // TODO: /api/projects 연동
-    if (editingId) {
-      setProjects((prev) =>
-        prev.map((p) => (p.id === editingId ? { ...p, ...form } : p)),
+    try {
+      if (editingId) {
+        const res = await fetch(`/api/projects/${editingId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        setProjects((prev) =>
+          prev.map((p) => (p.id === editingId ? { ...p, ...form } : p)),
+        );
+      } else {
+        const res = await fetch("/api/projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        setProjects((prev) => [...prev, { id: data.id, ...form }]);
+      }
+      startCreate();
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
       );
-    } else {
-      setProjects((prev) => [
-        ...prev,
-        { id: `proj-${Date.now()}`, ...form },
-      ]);
     }
-    startCreate();
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (!window.confirm("이 프로젝트 설정을 삭제할까요?")) return;
-    // TODO: /api/projects 연동
-    setProjects((prev) => prev.filter((p) => p.id !== id));
-    if (editingId === id) startCreate();
+    try {
+      const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error((await res.json()).error);
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+      if (editingId === id) startCreate();
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "삭제 중 오류가 발생했습니다.",
+      );
+    }
   }
 
   return (

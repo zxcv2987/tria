@@ -4,10 +4,28 @@ export const runtime = "nodejs";
 
 const ALLOWED = new Set(["RUNNING", "QUEUED", "SUCCEEDED", "FAILED"]);
 
+function authorize(request: Request): boolean {
+  const secret = process.env.CALLBACK_SECRET;
+  if (!secret) return false;
+  const header = request.headers.get("authorization");
+  if (!header?.startsWith("Bearer ")) return false;
+  return header.slice("Bearer ".length) === secret;
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ runId: string }> }
 ) {
+  if (!process.env.CALLBACK_SECRET) {
+    return Response.json(
+      { error: "CALLBACK_SECRET 환경변수가 없습니다." },
+      { status: 500 }
+    );
+  }
+  if (!authorize(request)) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { runId } = await params;
   if (!runId) {
     return Response.json({ error: "runId가 필요합니다." }, { status: 400 });

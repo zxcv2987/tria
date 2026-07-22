@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import type { AnalysisResult as AnalysisResultType } from "@tria/analysis";
 import {
   ANALYSIS_STATUS_LABEL,
@@ -66,9 +67,22 @@ function StringList({
 }
 
 export function IssueDetailCard({ issue, run, analysisResult }: Props) {
+  const router = useRouter();
+
   async function handleReanalyze() {
-    // TODO: /api/issues/[id]/reanalyze 연동
-    window.alert("재분석 요청은 API 연동 후 동작합니다.");
+    try {
+      const res = await fetch(`/api/issues/${issue.id}/analyze`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      window.alert("재분석을 요청했습니다.");
+      router.refresh();
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "재분석 요청 중 오류가 발생했습니다.",
+      );
+    }
   }
 
   async function handleCopy() {
@@ -94,9 +108,22 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
     window.alert("분석 결과를 복사했습니다.");
   }
 
-  function handleFeedback(value: string) {
-    // TODO: /api/analysis-runs/[id]/feedback 연동
-    window.alert(`피드백(${value})은 API 연동 후 저장됩니다.`);
+  async function handleFeedback(value: string) {
+    if (!run) return;
+    try {
+      const res = await fetch(`/api/analysis/${run.id}/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ result: value }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      window.alert("피드백을 저장했습니다.");
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "피드백 저장 중 오류가 발생했습니다.",
+      );
+    }
   }
 
   const evidence = analysisResult?.evidence ?? run?.evidence ?? [];

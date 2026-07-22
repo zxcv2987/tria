@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { IssueListTable } from "@/components/issue-list-table";
-import { MOCK_ISSUES, MOCK_PROJECTS } from "@/components/mock-data";
+import { fetchIssuesPageData } from "@/lib/app-data";
 
-export default function IssuesPage() {
-  // TODO: /api/issues 연동
-  const issues = MOCK_ISSUES;
-  const projectKeys = MOCK_PROJECTS.map((p) => p.key);
+export default async function IssuesPage() {
+  const { issues, runs, projects } = await fetchIssuesPageData();
 
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-black">
@@ -31,7 +29,7 @@ export default function IssuesPage() {
           </Link>
         </div>
 
-        <IssueListTable issues={issues} projectKeys={projectKeys} />
+        <IssueListTable issues={issues} runs={runs} projects={projects} />
       </main>
     </div>
   );

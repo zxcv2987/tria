@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { ProjectConfigForm } from "@/components/project-config-form";
-import { MOCK_PROJECTS } from "@/components/mock-data";
+import { fetchProjectsData } from "@/lib/app-data";
 
-export default function ProjectSettingsPage() {
-  // TODO: /api/projects 연동
+export default async function ProjectSettingsPage() {
+  const projects = await fetchProjectsData();
+
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-black">
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10">
@@ -20,7 +21,7 @@ export default function ProjectSettingsPage() {
           </h1>
         </div>
 
-        <ProjectConfigForm initialProjects={MOCK_PROJECTS} />
+        <ProjectConfigForm initialProjects={projects} />
       </main>
     </div>
   );

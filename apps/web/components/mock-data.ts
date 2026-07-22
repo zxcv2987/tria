@@ -237,14 +237,20 @@ export const MOCK_ANALYSIS_RUNS: AnalysisRun[] = [
   },
 ];
 
-export function getLatestRun(issueId: string): AnalysisRun | undefined {
-  return MOCK_ANALYSIS_RUNS.filter((r) => r.issueId === issueId).sort((a, b) =>
-    b.createdAt.localeCompare(a.createdAt),
-  )[0];
+export function getLatestRun(
+  runs: AnalysisRun[],
+  issueId: string,
+): AnalysisRun | undefined {
+  return runs
+    .filter((r) => r.issueId === issueId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
 }
 
-export function getProjectName(projectKey: string): string {
-  return MOCK_PROJECTS.find((p) => p.key === projectKey)?.name ?? projectKey;
+export function getProjectName(
+  projects: ProjectConfig[],
+  projectKey: string,
+): string {
+  return projects.find((p) => p.key === projectKey)?.name ?? projectKey;
 }
 
 /** AnalysisRun → @tria/analysis AnalysisResult (결과 표시용, resultType 그대로) */

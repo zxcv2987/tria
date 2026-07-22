@@ -1,11 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { IssueDetailCard } from "@/components/issue-detail-card";
-import {
-  MOCK_ISSUES,
-  getLatestRun,
-  toAnalysisResult,
-} from "@/components/mock-data";
+import { getLatestRun, toAnalysisResult } from "@/components/mock-data";
+import { fetchIssueDetailData } from "@/lib/app-data";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -14,11 +11,11 @@ type Props = {
 export default async function IssueDetailPage({ params }: Props) {
   const { id } = await params;
 
-  // TODO: /api/issues/[id] 연동
-  const issue = MOCK_ISSUES.find((item) => item.id === id);
-  if (!issue) notFound();
+  const data = await fetchIssueDetailData(id);
+  if (!data) notFound();
+  const { issue, runs } = data;
 
-  const run = getLatestRun(issue.id);
+  const run = getLatestRun(runs, issue.id);
   const analysisResult = run ? toAnalysisResult(run) : null;
 
   return (

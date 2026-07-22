@@ -61,6 +61,35 @@ const OUTPUT_SCHEMA = {
   additionalProperties: false,
 };
 
+/** CALLBACK_URL(.../api/analysis/callback)에서 상태 갱신 엔드포인트 URL을 유도한다. */
+function buildStatusUrl(callbackUrl: string, analysisRunId: string): string {
+  const base = callbackUrl.replace(/\/api\/analysis\/callback\/?$/, "");
+  return `${base}/api/analysis/${analysisRunId}/status`;
+}
+
+/** RUNNING 보고는 best-effort — 실패해도 분석 자체는 계속 진행한다. */
+async function reportRunning(
+  callbackUrl: string,
+  callbackSecret: string,
+  analysisRunId: string
+): Promise<void> {
+  try {
+    await fetch(buildStatusUrl(callbackUrl, analysisRunId), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${callbackSecret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: "RUNNING" }),
+    });
+  } catch (err) {
+    console.error(
+      "RUNNING 상태 보고 실패 (무시하고 계속 진행):",
+      err instanceof Error ? err.message : err
+    );
+  }
+}
+
 function requireEnv(): Record<(typeof REQUIRED_ENV)[number], string> {
   const missing = REQUIRED_ENV.filter((key) => !process.env[key]);
   if (missing.length > 0) {
@@ -129,6 +158,8 @@ async function main(): Promise<void> {
   } = env;
 
   let payload: CallbackPayload;
+
+  await reportRunning(CALLBACK_URL, CALLBACK_SECRET, ANALYSIS_RUN_ID);
 
   try {
     const prompt = await buildPrompt(ISSUE_TITLE, ISSUE_BODY);

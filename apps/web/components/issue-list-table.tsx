@@ -10,11 +10,13 @@ import {
   getProjectName,
   type AnalysisRun,
   type Issue,
+  type ProjectConfig,
 } from "./mock-data";
 
 type Props = {
   issues: Issue[];
-  projectKeys: string[];
+  runs: AnalysisRun[];
+  projects: ProjectConfig[];
 };
 
 type MetricKey =
@@ -41,11 +43,12 @@ function metricFor(issue: Issue, run: AnalysisRun | undefined): MetricKey | null
   return null;
 }
 
-export function IssueListTable({ issues, projectKeys }: Props) {
+export function IssueListTable({ issues, runs, projects }: Props) {
   const [project, setProject] = useState("");
   const [analysisStatus, setAnalysisStatus] = useState("");
   const [resultType, setResultType] = useState("");
   const [query, setQuery] = useState("");
+  const projectKeys = projects.map((p) => p.key);
 
   const metrics = useMemo(() => {
     const counts = {
@@ -56,15 +59,15 @@ export function IssueListTable({ issues, projectKeys }: Props) {
       failed: 0,
     };
     for (const issue of issues) {
-      const key = metricFor(issue, getLatestRun(issue.id));
+      const key = metricFor(issue, getLatestRun(runs, issue.id));
       if (key) counts[key] += 1;
     }
     return counts;
-  }, [issues]);
+  }, [issues, runs]);
 
   const filtered = useMemo(() => {
     return issues.filter((issue) => {
-      const run = getLatestRun(issue.id);
+      const run = getLatestRun(runs, issue.id);
       if (project && issue.projectKey !== project) return false;
       if (analysisStatus && run?.status !== analysisStatus) return false;
       if (resultType && run?.resultType !== resultType) return false;
@@ -74,7 +77,7 @@ export function IssueListTable({ issues, projectKeys }: Props) {
       }
       return true;
     });
-  }, [issues, project, analysisStatus, resultType, query]);
+  }, [issues, runs, project, analysisStatus, resultType, query]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -108,7 +111,7 @@ export function IssueListTable({ issues, projectKeys }: Props) {
           <option value="">전체 프로젝트</option>
           {projectKeys.map((key) => (
             <option key={key} value={key}>
-              {getProjectName(key)}
+              {getProjectName(projects, key)}
             </option>
           ))}
         </select>
@@ -146,7 +149,6 @@ export function IssueListTable({ issues, projectKeys }: Props) {
         />
       </div>
 
-      {/* TODO: /api/issues 연동 */}
       <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
         <table className="w-full min-w-[56rem] text-left text-sm">
           <thead className="border-b border-zinc-200 bg-zinc-50 text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900">
@@ -163,7 +165,7 @@ export function IssueListTable({ issues, projectKeys }: Props) {
           </thead>
           <tbody>
             {filtered.map((issue) => {
-              const run = getLatestRun(issue.id);
+              const run = getLatestRun(runs, issue.id);
               return (
                 <tr
                   key={issue.id}
@@ -177,7 +179,9 @@ export function IssueListTable({ issues, projectKeys }: Props) {
                       {issue.title}
                     </Link>
                   </td>
-                  <td className="px-3 py-2">{getProjectName(issue.projectKey)}</td>
+                  <td className="px-3 py-2">
+                    {getProjectName(projects, issue.projectKey)}
+                  </td>
                   <td className="px-3 py-2">{issue.asanaStatus}</td>
                   <td className="px-3 py-2">
                     {run ? ANALYSIS_STATUS_LABEL[run.status] : "-"}
