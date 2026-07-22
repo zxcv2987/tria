@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { ProjectConfig } from "./mock-data";
+
+type RepoOption = { owner: string; repo: string };
 
 type Props = {
   initialProjects: ProjectConfig[];
@@ -22,6 +24,21 @@ export function ProjectConfigForm({ initialProjects }: Props) {
   const [projects, setProjects] = useState(initialProjects);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [repoOptions, setRepoOptions] = useState<RepoOption[]>([]);
+
+  useEffect(() => {
+    fetch("/api/github/available-repos")
+      .then((res) => res.json())
+      .then((data: { repositories?: RepoOption[] }) =>
+        setRepoOptions(data.repositories ?? []),
+      )
+      .catch(() => setRepoOptions([]));
+  }, []);
+
+  function handleRepoSelect(value: string) {
+    const [githubOwner = "", githubRepository = ""] = value.split("/");
+    setForm((prev) => ({ ...prev, githubOwner, githubRepository }));
+  }
 
   function startCreate() {
     setEditingId(null);
@@ -128,8 +145,6 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             ["key", "프로젝트 키", "classroom"],
             ["name", "표시 이름", "Classroom"],
             ["asanaProjectValue", "Asana 프로젝트 값", "Classroom 이슈"],
-            ["githubOwner", "GitHub Owner", "tria-org"],
-            ["githubRepository", "GitHub 저장소", "classroom-web"],
             ["defaultRef", "기본 브랜치", "main"],
           ] as const
         ).map(([field, label, placeholder]) => (
@@ -151,6 +166,61 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             />
           </div>
         ))}
+
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="githubRepo"
+            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+          >
+            GitHub 저장소
+          </label>
+          {repoOptions.length > 0 ? (
+            <select
+              id="githubRepo"
+              value={
+                form.githubOwner && form.githubRepository
+                  ? `${form.githubOwner}/${form.githubRepository}`
+                  : ""
+              }
+              onChange={(e) => handleRepoSelect(e.target.value)}
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            >
+              <option value="">선택하세요 (App이 설치된 저장소만 표시)</option>
+              {repoOptions.map(({ owner, repo }) => (
+                <option key={`${owner}/${repo}`} value={`${owner}/${repo}`}>
+                  {owner}/{repo}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <>
+              <p className="text-xs text-zinc-500">
+                설치된 저장소 목록을 못 불러와서 직접 입력으로 대체합니다.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  value={form.githubOwner}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, githubOwner: e.target.value }))
+                  }
+                  placeholder="tria-org"
+                  className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                />
+                <input
+                  value={form.githubRepository}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      githubRepository: e.target.value,
+                    }))
+                  }
+                  placeholder="classroom-web"
+                  className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                />
+              </div>
+            </>
+          )}
+        </div>
 
         <label className="flex items-center gap-2 text-sm">
           <input
