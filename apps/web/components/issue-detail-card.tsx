@@ -1,9 +1,11 @@
 "use client";
 
 import type { AnalysisResult as AnalysisResultType } from "@tria/analysis";
-import { ResultBadge, StatusBadge } from "@/components/ui/badge";
 import {
-  ANALYSIS_STATUS_LABEL,
+  AnalysisStatusBadge,
+  ResultBadge,
+} from "@/components/status-badges";
+import {
   formatDateTime,
   type AnalysisRun,
   type Issue,
@@ -173,7 +175,7 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
       <section className={`${cardClass} flex flex-col gap-5`}>
         <div className="flex flex-wrap items-center gap-2.5">
           <h2 className={sectionTitleClass}>분석 결과</h2>
-          {run && <StatusBadge>{ANALYSIS_STATUS_LABEL[run.status]}</StatusBadge>}
+          {run && <AnalysisStatusBadge status={run.status} />}
         </div>
 
         {!run && <p className={helpTextClass}>아직 분석 실행이 없습니다.</p>}

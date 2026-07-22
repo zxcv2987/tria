@@ -40,8 +40,6 @@ export const cardClass =
 export const inputClass =
   "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm leading-normal text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-400 dark:focus:ring-zinc-100/10";
 
-export const selectClass = inputClass;
-
 export const codeChipClass =
   "rounded-md bg-zinc-100 px-1.5 py-0.5 font-mono text-xs leading-normal text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200";
 

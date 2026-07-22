@@ -2,6 +2,14 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import type { ProjectConfig } from "./mock-data";
+import { ActiveBadge } from "@/components/status-badges";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   btnGhostClass,
   btnPrimaryClass,
@@ -10,7 +18,6 @@ import {
   helpTextClass,
   inputClass,
   sectionTitleClass,
-  selectClass,
   tableCellClass,
   tableClass,
   tableHeadCellClass,
@@ -18,6 +25,8 @@ import {
   tableRowClass,
   tableWrapClass,
 } from "@/components/ui/styles";
+
+const REPO_NONE = "__none__";
 
 type RepoOption = { owner: string; repo: string };
 
@@ -119,7 +128,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
                 </td>
                 <td className={tableCellClass}>{p.defaultRef}</td>
                 <td className={tableCellClass}>
-                  {p.isActive ? "활성" : "비활성"}
+                  <ActiveBadge active={p.isActive} />
                 </td>
                 <td className={tableCellClass}>
                   <button
@@ -180,23 +189,41 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             GitHub 저장소
           </label>
           {repoOptions.length > 0 ? (
-            <select
-              id="githubRepo"
+            <Select
               value={
                 form.githubOwner && form.githubRepository
                   ? `${form.githubOwner}/${form.githubRepository}`
-                  : ""
+                  : REPO_NONE
               }
-              onChange={(e) => handleRepoSelect(e.target.value)}
-              className={selectClass}
+              onValueChange={(value) => {
+                if (value === REPO_NONE) {
+                  setForm((prev) => ({
+                    ...prev,
+                    githubOwner: "",
+                    githubRepository: "",
+                  }));
+                  return;
+                }
+                handleRepoSelect(value);
+              }}
             >
-              <option value="">선택하세요 (App이 설치된 저장소만 표시)</option>
-              {repoOptions.map(({ owner, repo }) => (
-                <option key={`${owner}/${repo}`} value={`${owner}/${repo}`}>
-                  {owner}/{repo}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="githubRepo" className="h-9 w-full">
+                <SelectValue placeholder="선택하세요 (App이 설치된 저장소만 표시)" />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                <SelectItem value={REPO_NONE}>
+                  선택하세요 (App이 설치된 저장소만 표시)
+                </SelectItem>
+                {repoOptions.map(({ owner, repo }) => (
+                  <SelectItem
+                    key={`${owner}/${repo}`}
+                    value={`${owner}/${repo}`}
+                  >
+                    {owner}/{repo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           ) : (
             <>
               <p className={helpTextClass}>

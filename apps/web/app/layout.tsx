@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans_KR, Geist_Mono } from "next/font/google";
 import { AppNav } from "@/components/app-nav";
+import { cn } from "@/lib/utils";
 import "./globals.css";
 
 const notoSansKr = Noto_Sans_KR({
@@ -28,7 +29,11 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${notoSansKr.variable} ${geistMono.variable} h-full antialiased`}
+      className={cn(
+        "h-full antialiased font-sans",
+        notoSansKr.variable,
+        geistMono.variable,
+      )}
     >
       <body className="flex min-h-full flex-col font-sans">
         <AppNav />

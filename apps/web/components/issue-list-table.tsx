@@ -12,11 +12,22 @@ import {
   type Issue,
 } from "./mock-data";
 import {
+  AnalysisStatusBadge,
+  AsanaStatusBadge,
+  ResultBadge,
+} from "@/components/status-badges";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   helpTextClass,
   inputClass,
   linkClass,
   metricCardClass,
-  selectClass,
   tableCellClass,
   tableClass,
   tableHeadCellClass,
@@ -24,6 +35,8 @@ import {
   tableRowClass,
   tableWrapClass,
 } from "@/components/ui/styles";
+
+const ALL = "__all__";
 
 type Props = {
   issues: Issue[];
@@ -111,50 +124,64 @@ export function IssueListTable({ issues, projectKeys }: Props) {
       </div>
 
       <div className="flex flex-wrap gap-2.5">
-        <select
-          value={project}
-          onChange={(e) => setProject(e.target.value)}
-          className={`${selectClass} w-auto min-w-[10rem]`}
-          aria-label="프로젝트 필터"
+        <Select
+          value={project || ALL}
+          onValueChange={(value) => setProject(value === ALL ? "" : value)}
         >
-          <option value="">전체 프로젝트</option>
-          {projectKeys.map((key) => (
-            <option key={key} value={key}>
-              {getProjectName(key)}
-            </option>
-          ))}
-        </select>
-        <select
-          value={analysisStatus}
-          onChange={(e) => setAnalysisStatus(e.target.value)}
-          className={`${selectClass} w-auto min-w-[10rem]`}
-          aria-label="분석 상태 필터"
+          <SelectTrigger className="h-9 min-w-[10rem]" aria-label="프로젝트 필터">
+            <SelectValue placeholder="전체 프로젝트" />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            <SelectItem value={ALL}>전체 프로젝트</SelectItem>
+            {projectKeys.map((key) => (
+              <SelectItem key={key} value={key}>
+                {getProjectName(key)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={analysisStatus || ALL}
+          onValueChange={(value) =>
+            setAnalysisStatus(value === ALL ? "" : value)
+          }
         >
-          <option value="">전체 분석 상태</option>
-          {Object.entries(ANALYSIS_STATUS_LABEL).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={resultType}
-          onChange={(e) => setResultType(e.target.value)}
-          className={`${selectClass} w-auto min-w-[10rem]`}
-          aria-label="AI 판정 필터"
+          <SelectTrigger className="h-9 min-w-[10rem]" aria-label="분석 상태 필터">
+            <SelectValue placeholder="전체 분석 상태" />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            <SelectItem value={ALL}>전체 분석 상태</SelectItem>
+            {Object.entries(ANALYSIS_STATUS_LABEL).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={resultType || ALL}
+          onValueChange={(value) => setResultType(value === ALL ? "" : value)}
         >
-          <option value="">전체 AI 판정</option>
-          {Object.entries(RESULT_TYPE_LABEL).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="h-9 min-w-[10rem]" aria-label="AI 판정 필터">
+            <SelectValue placeholder="전체 AI 판정" />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            <SelectItem value={ALL}>전체 AI 판정</SelectItem>
+            {Object.entries(RESULT_TYPE_LABEL).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="제목 검색"
-          className={`${inputClass} min-w-[12rem] flex-1`}
+          className={`${inputClass} h-9 min-w-[12rem] flex-1 py-0`}
         />
       </div>
 
@@ -189,14 +216,18 @@ export function IssueListTable({ issues, projectKeys }: Props) {
                   <td className={`${tableCellClass} text-zinc-700 dark:text-zinc-300`}>
                     {getProjectName(issue.projectKey)}
                   </td>
-                  <td className={`${tableCellClass} text-zinc-700 dark:text-zinc-300`}>
-                    {issue.asanaStatus}
+                  <td className={tableCellClass}>
+                    <AsanaStatusBadge status={issue.asanaStatus} />
                   </td>
-                  <td className={`${tableCellClass} text-zinc-700 dark:text-zinc-300`}>
-                    {run ? ANALYSIS_STATUS_LABEL[run.status] : "-"}
+                  <td className={tableCellClass}>
+                    {run ? <AnalysisStatusBadge status={run.status} /> : "-"}
                   </td>
-                  <td className={`${tableCellClass} text-zinc-700 dark:text-zinc-300`}>
-                    {run?.resultType ? RESULT_TYPE_LABEL[run.resultType] : "-"}
+                  <td className={tableCellClass}>
+                    {run?.resultType ? (
+                      <ResultBadge result={run.resultType} />
+                    ) : (
+                      "-"
+                    )}
                   </td>
                   <td className={`${tableCellClass} whitespace-nowrap text-zinc-600 dark:text-zinc-400`}>
                     {formatDateTime(issue.createdAt)}

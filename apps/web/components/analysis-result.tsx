@@ -1,5 +1,5 @@
 import type { AnalysisResult as AnalysisResultType } from "@tria/analysis";
-import { ResultBadge } from "@/components/ui/badge";
+import { ResultBadge } from "@/components/status-badges";
 import {
   bodyTextClass,
   cardClass,
