@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import assert from "node:assert";
-import type { AnalysisResult } from "./schemas";
+import type { AnalysisResult } from "./types";
 
 export function validateResult(
   result: AnalysisResult,
@@ -25,16 +25,16 @@ export function validateResult(
   return { ...result, evidence: validEvidence, result: correctedResult };
 }
 
-// ponytail: assert 기반 self-check. 실행: node --experimental-strip-types lib/validate-result.ts
+// ponytail: assert 기반 self-check. 실행: node --experimental-strip-types packages/analysis/src/validate-result.ts
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const repositoryPath = process.cwd();
+  const repositoryPath = path.dirname(new URL(import.meta.url).pathname);
 
   const base: AnalysisResult = {
     result: "CODE_CANDIDATE",
     summary: "test",
     evidence: [
-      { path: "lib/schemas.ts", reason: "exists" },
-      { path: "lib/does-not-exist.ts", reason: "missing" },
+      { path: "types.ts", reason: "exists" },
+      { path: "does-not-exist.ts", reason: "missing" },
       { path: "../outside-evil.ts", reason: "traversal" },
     ],
     nextChecks: [],
@@ -44,7 +44,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const withRealEvidence = validateResult(base, repositoryPath);
   assert.deepStrictEqual(
     withRealEvidence.evidence.map((e) => e.path),
-    ["lib/schemas.ts"],
+    ["types.ts"],
     "존재하지 않거나 경로 탈출한 evidence는 제거되어야 한다"
   );
   assert.strictEqual(
@@ -54,7 +54,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   );
 
   const noValidEvidence = validateResult(
-    { ...base, evidence: [{ path: "lib/does-not-exist.ts", reason: "missing" }] },
+    { ...base, evidence: [{ path: "does-not-exist.ts", reason: "missing" }] },
     repositoryPath
   );
   assert.strictEqual(

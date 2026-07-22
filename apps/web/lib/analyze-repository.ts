@@ -3,7 +3,7 @@ import { promisify } from "util";
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
-import { AnalysisResult, isAnalysisResult } from "./schemas";
+import { AnalysisResult, isAnalysisResult } from "@tria/analysis";
 
 const execFileAsync = promisify(execFile);
 

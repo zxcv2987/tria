@@ -1,4 +1,4 @@
-import type { AnalysisResult as AnalysisResultType } from "@/lib/schemas";
+import type { AnalysisResult as AnalysisResultType } from "@tria/analysis";
 
 type AnalysisResultProps = {
   result: AnalysisResultType;

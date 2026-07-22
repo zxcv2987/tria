@@ -7,7 +7,7 @@ import { AnalysisResult } from "@/components/analysis-result";
 import type {
   AnalysisResult as AnalysisResultType,
   AnalysisStatus,
-} from "@/lib/schemas";
+} from "@tria/analysis";
 
 export default function Home() {
   const [status, setStatus] = useState<AnalysisStatus>("idle");

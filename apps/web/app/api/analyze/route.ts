@@ -1,5 +1,5 @@
 import { analyzeRepository } from "@/lib/analyze-repository";
-import { validateResult } from "@/lib/validate-result";
+import { validateResult } from "@tria/analysis";
 
 export const runtime = "nodejs";
 
