@@ -38,8 +38,8 @@ Supabase 클라이언트는 `docs/supabase.md`와 supabase 스킬을 참고해�
 ### `POST /api/issues/[id]/analyze`
 
 * `analysis_runs`에 `status: "QUEUED"` row 생성
-* GitHub API로 Tria 저장소에 `repository_dispatch` 호출 (`event_type: "analyze-issue"`, client_payload는 `docs/github-actions/README.md`의 payload 스키마 그대로 — `analysisRunId`, `projectKey`, `repositoryName`, `ref`, `issueTitle`, `issueBody`, `callbackUrl`)
-* `repositoryName`/`ref`는 사용자 입력이 아니라 `project_configs`에서 조회한 값만 사용 (문서 14장 — allowlist)
+* GitHub API로 Tria 저장소에 `repository_dispatch` 호출 (`event_type: "analyze-issue"`, client_payload는 `docs/github-actions/README.md`의 payload 스키마 그대로 — `analysisRunId`, `projectKey`, `repositoryOwner`, `repositoryName`, `ref`, `issueTitle`, `issueBody`, `callbackUrl`)
+* `repositoryOwner`/`repositoryName`/`ref`는 사용자 입력이 아니라 `project_configs`에서 조회한 값만 사용 (문서 14장 — allowlist). `repositoryOwner`는 Tria 자신의 owner와 다를 수 있다 (다른 조직 레포 지원).
 * 즉시 `{ analysisRunId, status: "QUEUED" }` 응답 (동기로 기다리지 않음)
 * 실제 GitHub App 토큰/PAT이 아직 없으면 `GITHUB_DISPATCH_TOKEN` 환경변수를 읽는 걸로 구현해두고, 없을 때는 에러를 명확히 반환 (다른 트랙이 나중에 실제 토큰을 채움)
 

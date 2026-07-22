@@ -36,20 +36,21 @@ jobs:
         run: pnpm install
 
       # GitHub App 설치 토큰 (문서 8.2)
+      # repositoryOwner는 Tria 자신의 owner와 다를 수 있다 (다른 조직 레포 분석 지원).
+      # TRIA_READER App이 해당 owner/repo에도 설치되어 있어야 한다.
       - name: Create GitHub App token
         id: app-token
         uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ secrets.TRIA_READER_CLIENT_ID }}
           private-key: ${{ secrets.TRIA_READER_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
+          owner: ${{ github.event.client_payload.repositoryOwner }}
           repositories: ${{ github.event.client_payload.repositoryName }}
 
-      # repositoryName은 저장소명만 오므로 현재 owner 아래에 checkout한다.
       - name: Checkout target repository
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository_owner }}/${{ github.event.client_payload.repositoryName }}
+          repository: ${{ github.event.client_payload.repositoryOwner }}/${{ github.event.client_payload.repositoryName }}
           ref: ${{ github.event.client_payload.ref }}
           token: ${{ steps.app-token.outputs.token }}
           path: target

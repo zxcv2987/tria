@@ -1,6 +1,7 @@
 export type AnalyzeDispatchPayload = {
   analysisRunId: string;
   projectKey: string;
+  repositoryOwner: string;
   repositoryName: string;
   ref: string;
   issueTitle: string;

@@ -817,6 +817,7 @@ Payload 예시:
 {
   "analysisRunId": "run_123",
   "projectKey": "admin",
+  "repositoryOwner": "company",
   "repositoryName": "admin-web",
   "ref": "develop",
   "issueTitle": "담당자 변경 후 목록 미반영",

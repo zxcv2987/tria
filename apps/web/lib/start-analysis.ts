@@ -16,6 +16,7 @@ type IssueRow = {
 
 type ProjectConfigRow = {
   key: string;
+  github_owner: string;
   github_repository: string;
   default_ref: string;
   is_active: boolean;
@@ -39,7 +40,7 @@ export async function startAnalysis(
 
   const { data: config, error: configError } = await db
     .from("project_configs")
-    .select("key, github_repository, default_ref, is_active")
+    .select("key, github_owner, github_repository, default_ref, is_active")
     .eq("key", row.project_key)
     .eq("is_active", true)
     .maybeSingle();
@@ -83,6 +84,7 @@ export async function startAnalysis(
     await dispatchAnalyzeIssue({
       analysisRunId,
       projectKey: project.key,
+      repositoryOwner: project.github_owner,
       repositoryName: project.github_repository,
       ref: project.default_ref,
       issueTitle: row.title,
