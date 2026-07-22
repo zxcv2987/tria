@@ -1,8 +1,3 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import fs from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
 import {
   isAnalysisResult,
   type CallbackPayload,
@@ -10,8 +5,9 @@ import {
 import { buildPrompt } from "./build-prompt";
 import { validateEvidence } from "./validate-evidence";
 import { sendCallback } from "./send-callback";
-
-const execFileAsync = promisify(execFile);
+import { codexProvider } from "./providers/codex";
+import { geminiProvider } from "./providers/gemini";
+import type { AnalysisProvider } from "./providers/types";
 
 const REQUIRED_ENV = [
   "ANALYSIS_RUN_ID",
@@ -22,44 +18,20 @@ const REQUIRED_ENV = [
   "CALLBACK_SECRET",
 ] as const;
 
-const OUTPUT_SCHEMA = {
-  type: "object",
-  properties: {
-    result: {
-      type: "string",
-      enum: ["CODE_LIKELY", "CHECK_EXTERNAL", "NEED_MORE_INFO"],
-    },
-    summary: { type: "string" },
-    suspectedArea: { type: ["string", "null"] },
-    evidence: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          path: { type: "string" },
-          symbol: { type: "string" },
-          reason: { type: "string" },
-        },
-        // Codex structured output은 properties 키가 전부 required여야 한다.
-        required: ["path", "symbol", "reason"],
-        additionalProperties: false,
-      },
-    },
-    externalChecks: { type: "array", items: { type: "string" } },
-    missingInformation: { type: "array", items: { type: "string" } },
-    limitations: { type: "array", items: { type: "string" } },
-  },
-  required: [
-    "result",
-    "summary",
-    "suspectedArea",
-    "evidence",
-    "externalChecks",
-    "missingInformation",
-    "limitations",
-  ],
-  additionalProperties: false,
-};
+/** ANALYSIS_PROVIDER=codex|gemini (기본 gemini — 무료 API 키로 테스트 가능). */
+function selectProvider(): AnalysisProvider {
+  const name = process.env.ANALYSIS_PROVIDER ?? "gemini";
+  if (name === "codex") return codexProvider;
+  if (name === "gemini") {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error(
+        "ANALYSIS_PROVIDER=gemini인데 GEMINI_API_KEY 환경변수가 없습니다."
+      );
+    }
+    return geminiProvider;
+  }
+  throw new Error(`알 수 없는 ANALYSIS_PROVIDER: ${name}`);
+}
 
 /** CALLBACK_URL(.../api/analysis/callback)에서 상태 갱신 엔드포인트 URL을 유도한다. */
 function buildStatusUrl(callbackUrl: string, analysisRunId: string): string {
@@ -100,45 +72,6 @@ function requireEnv(): Record<(typeof REQUIRED_ENV)[number], string> {
   ) as Record<(typeof REQUIRED_ENV)[number], string>;
 }
 
-async function runCodex(
-  repositoryPath: string,
-  prompt: string
-): Promise<unknown> {
-  const workDir = await fs.mkdtemp(path.join(os.tmpdir(), "tria-codex-"));
-  const schemaPath = path.join(workDir, "schema.json");
-  const outputPath = path.join(workDir, "output.json");
-
-  try {
-    await fs.writeFile(schemaPath, JSON.stringify(OUTPUT_SCHEMA));
-
-    const run = execFileAsync(
-      "codex",
-      [
-        "exec",
-        "-C",
-        repositoryPath,
-        "-s",
-        "read-only",
-        "--skip-git-repo-check",
-        "--output-schema",
-        schemaPath,
-        "-o",
-        outputPath,
-        prompt,
-      ],
-      { timeout: 5 * 60 * 1000, maxBuffer: 10 * 1024 * 1024 }
-    );
-    // codex는 프롬프트를 인자로 받아도 stdin이 열려 있으면 EOF를 기다리며 멈춘다.
-    run.child.stdin?.end();
-    await run;
-
-    const raw = await fs.readFile(outputPath, "utf-8");
-    return JSON.parse(raw);
-  } finally {
-    await fs.rm(workDir, { recursive: true, force: true });
-  }
-}
-
 async function main(): Promise<void> {
   let env: ReturnType<typeof requireEnv>;
   try {
@@ -162,11 +95,12 @@ async function main(): Promise<void> {
   await reportRunning(CALLBACK_URL, CALLBACK_SECRET, ANALYSIS_RUN_ID);
 
   try {
+    const provider = selectProvider();
     const prompt = await buildPrompt(ISSUE_TITLE, ISSUE_BODY);
-    const parsed = await runCodex(TARGET_REPOSITORY_PATH, prompt);
+    const parsed = await provider.run(prompt, TARGET_REPOSITORY_PATH);
 
     if (!isAnalysisResult(parsed)) {
-      throw new Error("codex 출력이 AnalysisResult 형태와 일치하지 않습니다.");
+      throw new Error("분석 결과가 AnalysisResult 형태와 일치하지 않습니다.");
     }
 
     const result = validateEvidence(parsed, TARGET_REPOSITORY_PATH);

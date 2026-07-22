@@ -42,6 +42,8 @@ GitHub Actions 워크플로는 다음 환경변수를 설정한 뒤 `packages/ru
   TARGET_REPOSITORY_PATH  분석 대상 저장소가 checkout된 경로 (예: GITHUB_WORKSPACE/target)
   CALLBACK_URL          결과를 보낼 Tria Callback API 주소
   CALLBACK_SECRET       Callback 요청 인증에 쓸 공유 secret (헤더에 실어 보냄)
+  ANALYSIS_PROVIDER     codex | gemini (기본값 gemini)
+  GEMINI_API_KEY        ANALYSIS_PROVIDER=gemini일 때 필요 (무료 발급 가능)
 
 실행:
   node packages/runner/dist/run.js

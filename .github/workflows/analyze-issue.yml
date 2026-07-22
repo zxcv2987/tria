@@ -4,6 +4,7 @@
 # - TRIA_READER_CLIENT_ID / TRIA_READER_PRIVATE_KEY — 대상 저장소 checkout용 GitHub App
 # - CALLBACK_SECRET — packages/runner가 Tria Callback API를 호출할 때 쓰는 공유 secret
 #   (apps/web의 CALLBACK_SECRET과 반드시 같은 값이어야 한다)
+# - GEMINI_API_KEY — 분석 실행에 쓰는 Gemini CLI 인증 (aistudio.google.com/apikey 무료 발급)
 #
 # payload.repositoryName / ref 는 워크플로에서 추가 검증하지 않는다.
 # Tria 서버(web-api)가 프로젝트 설정에서 검증한 값만 보낸다는 전제다.
@@ -65,4 +66,6 @@ jobs:
           TARGET_REPOSITORY_PATH: ${{ github.workspace }}/target
           CALLBACK_URL: ${{ github.event.client_payload.callbackUrl }}
           CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET }}
+          ANALYSIS_PROVIDER: gemini
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: pnpm --filter runner start

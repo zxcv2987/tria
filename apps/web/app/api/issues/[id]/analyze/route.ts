@@ -14,7 +14,21 @@ export async function POST(
 
   try {
     const db = createServiceClient();
-    const result = await startAnalysis(db, id);
+
+    const { data: inFlight } = await db
+      .from("analysis_runs")
+      .select("id")
+      .eq("issue_id", id)
+      .in("status", ["QUEUED", "RUNNING"])
+      .limit(1);
+    if (inFlight && inFlight.length > 0) {
+      return Response.json(
+        { error: "이미 진행 중인 분석이 있습니다." },
+        { status: 409 }
+      );
+    }
+
+    const result = await startAnalysis(db, id, { force: true });
     return Response.json(result);
   } catch (error) {
     const message =

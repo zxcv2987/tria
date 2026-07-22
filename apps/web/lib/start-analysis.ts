@@ -22,10 +22,18 @@ type ProjectConfigRow = {
   is_active: boolean;
 };
 
-/** project_configs에서 allowlist된 repository/ref만 사용 (문서 14장). */
+/**
+ * project_configs에서 allowlist된 repository/ref만 사용 (문서 14장).
+ *
+ * force: 수동 재분석용. UNIQUE(issue_id, source_modified_at)은 같은 이슈
+ * 버전에 대한 자동(웹훅) 중복 실행을 막기 위한 제약이라, 사람이 명시적으로
+ * 재분석을 요청할 때는 이슈의 source_modified_at을 그대로 쓰지 않고 현재
+ * 시각으로 대체해 제약에 걸리지 않게 한다.
+ */
 export async function startAnalysis(
   db: SupabaseClient,
-  issueId: string
+  issueId: string,
+  options: { force?: boolean } = {}
 ): Promise<StartAnalysisResult> {
   const { data: issue, error: issueError } = await db
     .from("issues")
@@ -60,7 +68,9 @@ export async function startAnalysis(
     .from("analysis_runs")
     .insert({
       issue_id: row.id,
-      source_modified_at: row.source_modified_at,
+      source_modified_at: options.force
+        ? new Date().toISOString()
+        : row.source_modified_at,
       status: "QUEUED",
       target_repository: project.github_repository,
       target_ref: project.default_ref,
