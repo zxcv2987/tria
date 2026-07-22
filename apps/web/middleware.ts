@@ -16,7 +16,10 @@ function isProtectedApi(pathname: string): boolean {
   if (pathname === "/api/projects" || pathname.startsWith("/api/projects/")) {
     return true;
   }
-  return /^\/api\/issues\/[^/]+\/analyze$/.test(pathname);
+  // /api/issues/[id], /api/issues/[id]/analyze — 이슈 삭제/재분석
+  if (/^\/api\/issues\/[^/]+(\/analyze)?$/.test(pathname)) return true;
+  // /api/analysis/[runId]/feedback — 분석 피드백 저장
+  return /^\/api\/analysis\/[^/]+\/feedback$/.test(pathname);
 }
 
 export function middleware(request: NextRequest) {
