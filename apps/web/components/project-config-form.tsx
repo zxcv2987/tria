@@ -88,6 +88,13 @@ export function ProjectConfigForm({ initialProjects }: Props) {
     startCreate();
   }
 
+  function handleDelete(id: string) {
+    if (!window.confirm("이 프로젝트 설정을 삭제할까요?")) return;
+    // TODO: /api/projects 연동
+    setProjects((prev) => prev.filter((p) => p.id !== id));
+    if (editingId === id) startCreate();
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
@@ -118,13 +125,22 @@ export function ProjectConfigForm({ initialProjects }: Props) {
                 <td className="px-3 py-2">{p.defaultRef}</td>
                 <td className="px-3 py-2">{p.isActive ? "활성" : "비활성"}</td>
                 <td className="px-3 py-2">
-                  <button
-                    type="button"
-                    onClick={() => startEdit(p)}
-                    className="text-sm underline-offset-2 hover:underline"
-                  >
-                    수정
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(p)}
+                      className="text-sm underline-offset-2 hover:underline"
+                    >
+                      수정
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(p.id)}
+                      className="text-sm text-red-600 underline-offset-2 hover:underline dark:text-red-400"
+                    >
+                      삭제
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -138,7 +154,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
       >
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">
-            {editingId ? "프로젝트 수정" : "프로젝트 추가"}
+            {editingId ? "프로젝트 설정 수정" : "프로젝트 설정 추가"}
           </h2>
           {editingId && (
             <button
