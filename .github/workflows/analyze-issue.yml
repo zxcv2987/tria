@@ -1,9 +1,9 @@
 # Tria 이슈 분석 워크플로
 #
-# 한계 (최종 wiring 전):
-# - TRIA_GITHUB_APP_ID / TRIA_GITHUB_APP_PRIVATE_KEY / TRIA_CALLBACK_SECRET 이
-#   아직 저장소 Secret에 없어 end-to-end 실행은 불가하다.
-# - GitHub App 설치·대상 저장소 권한 부여가 완료된 뒤 Secret을 넣고 검증한다.
+# 필요한 저장소 Secret:
+# - TRIA_READER_CLIENT_ID / TRIA_READER_PRIVATE_KEY — 대상 저장소 checkout용 GitHub App
+# - TRIA_CALLBACK_SECRET — packages/runner가 Tria Callback API를 호출할 때 쓰는 공유 secret
+#   (apps/web의 CALLBACK_SECRET과 반드시 같은 값이어야 한다)
 #
 # payload.repositoryName / ref 는 워크플로에서 추가 검증하지 않는다.
 # Tria 서버(web-api)가 프로젝트 설정에서 검증한 값만 보낸다는 전제다.
@@ -35,13 +35,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # GitHub App 설치 토큰 (문서 8.2). App/Secret 미구성 상태에서는 이 단계부터 실패한다.
+      # GitHub App 설치 토큰 (문서 8.2)
       - name: Create GitHub App token
         id: app-token
         uses: actions/create-github-app-token@v2
         with:
-          app-id: ${{ secrets.TRIA_GITHUB_APP_ID }}
-          private-key: ${{ secrets.TRIA_GITHUB_APP_PRIVATE_KEY }}
+          app-id: ${{ secrets.TRIA_READER_CLIENT_ID }}
+          private-key: ${{ secrets.TRIA_READER_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.client_payload.repositoryName }}
 
