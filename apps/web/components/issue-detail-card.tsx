@@ -11,6 +11,7 @@ import {
   type AnalysisRun,
   type Issue,
 } from "./mock-data";
+import { useAlertDialog } from "@/components/ui/use-alert-dialog";
 import {
   bodyTextClass,
   btnPrimaryClass,
@@ -73,6 +74,7 @@ function StringList({
 
 export function IssueDetailCard({ issue, run, analysisResult }: Props) {
   const router = useRouter();
+  const { alert, confirm, dialog } = useAlertDialog();
 
   async function handleReanalyze() {
     try {
@@ -81,23 +83,27 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      window.alert("재분석을 요청했습니다.");
+      await alert("재분석을 요청했습니다.");
       router.refresh();
     } catch (err) {
-      window.alert(
+      await alert(
         err instanceof Error ? err.message : "재분석 요청 중 오류가 발생했습니다.",
       );
     }
   }
 
   async function handleDelete() {
-    if (!window.confirm("이 이슈를 삭제할까요?")) return;
+    const ok = await confirm("이 이슈를 삭제할까요?", {
+      title: "삭제",
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/issues/${issue.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error((await res.json()).error);
       router.push("/issues");
     } catch (err) {
-      window.alert(
+      await alert(
         err instanceof Error ? err.message : "삭제 중 오류가 발생했습니다.",
       );
     }
@@ -123,7 +129,7 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
           .join("\n")
       : (run?.summary ?? issue.title);
     await navigator.clipboard.writeText(text);
-    window.alert("분석 결과를 복사했습니다.");
+    await alert("분석 결과를 복사했습니다.");
   }
 
   async function handleFeedback(value: string) {
@@ -136,9 +142,9 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      window.alert("피드백을 저장했습니다.");
+      await alert("피드백을 저장했습니다.");
     } catch (err) {
-      window.alert(
+      await alert(
         err instanceof Error ? err.message : "피드백 저장 중 오류가 발생했습니다.",
       );
     }
@@ -157,6 +163,7 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
+      {dialog}
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={handleReanalyze} className={btnPrimaryClass}>
           재분석
