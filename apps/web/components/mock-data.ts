@@ -254,12 +254,13 @@ export function getProjectName(projectKey: string): string {
 export function toAnalysisResult(run: AnalysisRun): AnalysisResult | null {
   if (!run.resultType || !run.summary) return null;
   return {
-    result:
-      run.resultType === "CODE_LIKELY" ? "CODE_CANDIDATE" : "NEED_MORE_CHECK",
+    result: run.resultType,
     summary: run.summary,
-    evidence: run.evidence.map(({ path, reason }) => ({ path, reason })),
-    nextChecks: run.externalChecks,
-    limitation: run.limitations.join(" ") || "없음",
+    suspectedArea: run.suspectedArea,
+    evidence: run.evidence,
+    externalChecks: run.externalChecks,
+    missingInformation: run.missingInformation,
+    limitations: run.limitations,
   };
 }
 
