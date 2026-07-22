@@ -45,8 +45,8 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
           `판정: ${analysisResult.result}`,
           analysisResult.summary,
           ...analysisResult.evidence.map((e) => `- ${e.path}: ${e.reason}`),
-          ...analysisResult.nextChecks.map((c) => `점검: ${c}`),
-          `한계: ${analysisResult.limitation}`,
+          ...analysisResult.externalChecks.map((c) => `점검: ${c}`),
+          ...analysisResult.limitations.map((l) => `한계: ${l}`),
         ].join("\n")
       : run?.summary ?? issue.title;
     await navigator.clipboard.writeText(text);
@@ -58,7 +58,7 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
     window.alert(`피드백(${value})은 API 연동 후 저장됩니다.`);
   }
 
-  const isCandidate = analysisResult?.result === "CODE_CANDIDATE";
+  const isCandidate = analysisResult?.result === "CODE_LIKELY";
 
   return (
     <div className="flex flex-col gap-8">
@@ -223,12 +223,12 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
               <h3 className="text-xs font-semibold text-zinc-500">
                 추가 점검 항목
               </h3>
-              {(analysisResult?.nextChecks ?? run.externalChecks).length ===
+              {(analysisResult?.externalChecks ?? run.externalChecks).length ===
               0 ? (
                 <p className="text-sm text-zinc-500">-</p>
               ) : (
                 <ul className="list-disc pl-5 text-sm text-zinc-600 dark:text-zinc-400">
-                  {(analysisResult?.nextChecks ?? run.externalChecks).map(
+                  {(analysisResult?.externalChecks ?? run.externalChecks).map(
                     (c) => (
                       <li key={c}>{c}</li>
                     ),
@@ -239,11 +239,14 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
 
             <div className="flex flex-col gap-2">
               <h3 className="text-xs font-semibold text-zinc-500">누락 정보</h3>
-              {run.missingInformation.length === 0 ? (
+              {(analysisResult?.missingInformation ?? run.missingInformation)
+                .length === 0 ? (
                 <p className="text-sm text-zinc-500">-</p>
               ) : (
                 <ul className="list-disc pl-5 text-sm text-zinc-600 dark:text-zinc-400">
-                  {run.missingInformation.map((m) => (
+                  {(
+                    analysisResult?.missingInformation ?? run.missingInformation
+                  ).map((m) => (
                     <li key={m}>{m}</li>
                   ))}
                 </ul>
@@ -253,10 +256,9 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
             <Field
               label="분석 한계"
               value={
-                analysisResult?.limitation ??
-                (run.limitations.length > 0
-                  ? run.limitations.join("\n")
-                  : null)
+                (analysisResult?.limitations ?? run.limitations).length > 0
+                  ? (analysisResult?.limitations ?? run.limitations).join("\n")
+                  : null
               }
             />
 
