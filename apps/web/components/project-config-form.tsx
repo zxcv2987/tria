@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAlertDialog } from "@/components/ui/use-alert-dialog";
 import {
   btnGhostClass,
   btnPrimaryClass,
@@ -47,6 +48,7 @@ const emptyForm: Omit<ProjectConfig, "id"> = {
 };
 
 export function ProjectConfigForm({ initialProjects }: Props) {
+  const { alert, confirm, dialog } = useAlertDialog();
   const [projects, setProjects] = useState(initialProjects);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -122,21 +124,25 @@ export function ProjectConfigForm({ initialProjects }: Props) {
       }
       startCreate();
     } catch (err) {
-      window.alert(
+      await alert(
         err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
       );
     }
   }
 
   async function handleDelete(id: string) {
-    if (!window.confirm("이 프로젝트 설정을 삭제할까요?")) return;
+    const ok = await confirm("이 프로젝트 설정을 삭제할까요?", {
+      title: "삭제",
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error((await res.json()).error);
       setProjects((prev) => prev.filter((p) => p.id !== id));
       if (editingId === id) startCreate();
     } catch (err) {
-      window.alert(
+      await alert(
         err instanceof Error ? err.message : "삭제 중 오류가 발생했습니다.",
       );
     }
@@ -144,6 +150,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
 
   return (
     <div className="flex flex-col gap-8">
+      {dialog}
       <div className={tableWrapClass}>
         <table className={`${tableClass} min-w-[48rem]`}>
           <thead className={tableHeadClass}>
