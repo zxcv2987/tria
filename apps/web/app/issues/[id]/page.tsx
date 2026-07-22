@@ -6,6 +6,8 @@ import {
   getLatestRun,
   toAnalysisResult,
 } from "@/components/mock-data";
+import { PageHeader, PageShell } from "@/components/ui/page";
+import { linkClass } from "@/components/ui/styles";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -22,27 +24,25 @@ export default async function IssueDetailPage({ params }: Props) {
   const analysisResult = run ? toAnalysisResult(run) : null;
 
   return (
-    <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-black">
-      <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
-        <div>
-          <p className="text-sm text-zinc-500">
-            <Link href="/issues" className="hover:underline">
+    <PageShell width="medium">
+      <PageHeader
+        breadcrumb={
+          <>
+            <Link href="/issues" className={linkClass}>
               이슈 목록
             </Link>
             {" / "}
-            {issue.id}
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-            {issue.title}
-          </h1>
-        </div>
+            <span className="font-mono text-[0.7rem]">{issue.id}</span>
+          </>
+        }
+        title={issue.title}
+      />
 
-        <IssueDetailCard
-          issue={issue}
-          run={run}
-          analysisResult={analysisResult}
-        />
-      </main>
-    </div>
+      <IssueDetailCard
+        issue={issue}
+        run={run}
+        analysisResult={analysisResult}
+      />
+    </PageShell>
   );
 }
