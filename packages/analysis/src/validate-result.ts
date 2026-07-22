@@ -18,8 +18,8 @@ export function validateResult(
   });
 
   const correctedResult =
-    result.result === "CODE_CANDIDATE" && validEvidence.length === 0
-      ? "NEED_MORE_CHECK"
+    result.result === "CODE_LIKELY" && validEvidence.length === 0
+      ? "CHECK_EXTERNAL"
       : result.result;
 
   return { ...result, evidence: validEvidence, result: correctedResult };
@@ -30,15 +30,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const repositoryPath = path.dirname(new URL(import.meta.url).pathname);
 
   const base: AnalysisResult = {
-    result: "CODE_CANDIDATE",
+    result: "CODE_LIKELY",
     summary: "test",
+    suspectedArea: null,
     evidence: [
       { path: "types.ts", reason: "exists" },
       { path: "does-not-exist.ts", reason: "missing" },
       { path: "../outside-evil.ts", reason: "traversal" },
     ],
-    nextChecks: [],
-    limitation: "",
+    externalChecks: [],
+    missingInformation: [],
+    limitations: [],
   };
 
   const withRealEvidence = validateResult(base, repositoryPath);
@@ -49,7 +51,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   );
   assert.strictEqual(
     withRealEvidence.result,
-    "CODE_CANDIDATE",
+    "CODE_LIKELY",
     "유효 evidence가 있으면 판정을 유지해야 한다"
   );
 
@@ -59,8 +61,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   );
   assert.strictEqual(
     noValidEvidence.result,
-    "NEED_MORE_CHECK",
-    "유효 evidence가 0개면 CODE_CANDIDATE는 NEED_MORE_CHECK로 보정되어야 한다"
+    "CHECK_EXTERNAL",
+    "유효 evidence가 0개면 CODE_LIKELY는 CHECK_EXTERNAL로 보정되어야 한다"
   );
 
   console.log("validate-result self-check passed");

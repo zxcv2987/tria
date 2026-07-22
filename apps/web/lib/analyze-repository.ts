@@ -10,24 +10,38 @@ const execFileAsync = promisify(execFile);
 const OUTPUT_SCHEMA = {
   type: "object",
   properties: {
-    result: { type: "string", enum: ["CODE_CANDIDATE", "NEED_MORE_CHECK"] },
+    result: {
+      type: "string",
+      enum: ["CODE_LIKELY", "CHECK_EXTERNAL", "NEED_MORE_INFO"],
+    },
     summary: { type: "string" },
+    suspectedArea: { type: ["string", "null"] },
     evidence: {
       type: "array",
       items: {
         type: "object",
         properties: {
           path: { type: "string" },
+          symbol: { type: "string" },
           reason: { type: "string" },
         },
         required: ["path", "reason"],
         additionalProperties: false,
       },
     },
-    nextChecks: { type: "array", items: { type: "string" } },
-    limitation: { type: "string" },
+    externalChecks: { type: "array", items: { type: "string" } },
+    missingInformation: { type: "array", items: { type: "string" } },
+    limitations: { type: "array", items: { type: "string" } },
   },
-  required: ["result", "summary", "evidence", "nextChecks", "limitation"],
+  required: [
+    "result",
+    "summary",
+    "suspectedArea",
+    "evidence",
+    "externalChecks",
+    "missingInformation",
+    "limitations",
+  ],
   additionalProperties: false,
 };
 

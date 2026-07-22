@@ -17,18 +17,22 @@
 
 ```json
 {
-  "result": "CODE_CANDIDATE" | "NEED_MORE_CHECK",
+  "result": "CODE_LIKELY" | "CHECK_EXTERNAL" | "NEED_MORE_INFO",
   "summary": "string",
-  "evidence": [{ "path": "string", "reason": "string" }],
-  "nextChecks": ["string"],
-  "limitation": "string"
+  "suspectedArea": "string | null",
+  "evidence": [{ "path": "string", "symbol": "string (선택)", "reason": "string" }],
+  "externalChecks": ["string"],
+  "missingInformation": ["string"],
+  "limitations": ["string"]
 }
 ```
 
-* `result`: 저장소 코드에서 증상을 설명할 만한 근거를 찾았으면 `CODE_CANDIDATE`, 찾지 못했으면 `NEED_MORE_CHECK`.
-* `evidence`: 실제로 읽고 확인한, 저장소 내에 존재하는 파일 경로만 포함하세요. 추측만으로 파일을 지어내지 마세요. 근거가 없으면 빈 배열로 두세요.
-* `nextChecks`: 개발자가 다음에 확인해야 할 항목.
-* `limitation`: 이 분석의 한계 (예: 운영 환경 미확인, 외부 API 응답 미확인 등).
+* `result`: 저장소 코드에서 증상을 설명할 만한 근거를 찾았으면 `CODE_LIKELY`, 코드에서 직접적인 원인을 못 찾았고 API/데이터/배포/캐시/권한 등 외부를 확인해야 하면 `CHECK_EXTERNAL`, 이슈 내용만으로 화면·기능을 특정할 수 없으면 `NEED_MORE_INFO`.
+* `suspectedArea`: 의심되는 코드 영역(기능/화면 이름 등). 특정할 수 없으면 `null`.
+* `evidence`: 실제로 읽고 확인한, 저장소 내에 존재하는 파일 경로만 포함하세요. 추측만으로 파일을 지어내지 마세요. 근거가 없으면 빈 배열로 두세요. `symbol`은 관련 함수/컴포넌트 이름이 있으면 적으세요.
+* `externalChecks`: 코드 밖에서(API 응답, 배포 버전, 권한 등) 확인해야 할 항목.
+* `missingInformation`: 이슈 내용 중 부족해서 분석에 필요한 정보.
+* `limitations`: 이 분석의 한계 (예: 운영 환경 미확인, 외부 API 응답 미확인 등).
 
 ## 표현 원칙
 
