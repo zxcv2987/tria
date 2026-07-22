@@ -59,6 +59,7 @@ export async function startAnalysis(
     .from("analysis_runs")
     .insert({
       issue_id: row.id,
+      source_modified_at: row.source_modified_at,
       status: "QUEUED",
       target_repository: project.github_repository,
       target_ref: project.default_ref,

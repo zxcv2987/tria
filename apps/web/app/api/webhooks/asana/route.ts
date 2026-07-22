@@ -103,6 +103,12 @@ export async function POST(request: Request) {
             task.projectNames.includes(c.asana_project_value)
         )?.key ?? null;
 
+      // issues.project_key는 NOT NULL — 지원되는 프로젝트가 아니면 동기화하지 않는다 (문서 5.2).
+      if (!projectKey) {
+        console.error(`지원되지 않는 프로젝트, 동기화 건너뜀 (gid=${gid})`);
+        continue;
+      }
+
       const { data: upserted, error: upsertError } = await db
         .from("issues")
         .upsert(
