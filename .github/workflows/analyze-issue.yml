@@ -1,0 +1,67 @@
+# Tria 이슈 분석 워크플로
+#
+# 한계 (최종 wiring 전):
+# - TRIA_GITHUB_APP_ID / TRIA_GITHUB_APP_PRIVATE_KEY / TRIA_CALLBACK_SECRET 이
+#   아직 저장소 Secret에 없어 end-to-end 실행은 불가하다.
+# - GitHub App 설치·대상 저장소 권한 부여가 완료된 뒤 Secret을 넣고 검증한다.
+#
+# payload.repositoryName / ref 는 워크플로에서 추가 검증하지 않는다.
+# Tria 서버(web-api)가 프로젝트 설정에서 검증한 값만 보낸다는 전제다.
+
+name: Analyze Issue
+
+on:
+  repository_dispatch:
+    types: [analyze-issue]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Tria
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # GitHub App 설치 토큰 (문서 8.2). App/Secret 미구성 상태에서는 이 단계부터 실패한다.
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.TRIA_GITHUB_APP_ID }}
+          private-key: ${{ secrets.TRIA_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.client_payload.repositoryName }}
+
+      # repositoryName은 저장소명만 오므로 현재 owner 아래에 checkout한다.
+      - name: Checkout target repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/${{ github.event.client_payload.repositoryName }}
+          ref: ${{ github.event.client_payload.ref }}
+          token: ${{ steps.app-token.outputs.token }}
+          path: target
+          persist-credentials: false
+
+      # packages/runner 실행 계약 (runner 트랙과 공유하는 고정 env 이름)
+      - name: Run packages/runner
+        env:
+          ANALYSIS_RUN_ID: ${{ github.event.client_payload.analysisRunId }}
+          ISSUE_TITLE: ${{ github.event.client_payload.issueTitle }}
+          ISSUE_BODY: ${{ github.event.client_payload.issueBody }}
+          TARGET_REPOSITORY_PATH: ${{ github.workspace }}/target
+          CALLBACK_URL: ${{ github.event.client_payload.callbackUrl }}
+          CALLBACK_SECRET: ${{ secrets.TRIA_CALLBACK_SECRET }}
+        run: pnpm --filter runner start
