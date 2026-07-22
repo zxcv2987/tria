@@ -41,7 +41,8 @@ export async function POST(request: Request) {
   const hookSecret = request.headers.get("x-hook-secret");
   if (hookSecret) {
     // 최초 등록 핸드셰이크 — secret을 응답 헤더에 그대로 반환.
-    // 운영에서는 이 값을 ASANA_WEBHOOK_SECRET으로 저장해야 함 (wiring).
+    // 이 값을 ASANA_WEBHOOK_SECRET으로 저장해야 이후 요청의 서명 검증이 된다.
+    console.log("[asana webhook] handshake secret:", hookSecret);
     return new Response(null, {
       status: 200,
       headers: { "X-Hook-Secret": hookSecret },
