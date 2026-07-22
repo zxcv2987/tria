@@ -62,8 +62,16 @@ async function reportRunning(
   }
 }
 
+// ISSUE_BODY는 이슈 본문이 없으면 정상적으로 빈 문자열일 수 있다 — 다른 값들과
+// 달리 undefined(진짜 안 넘어옴)만 에러로 보고, ""(비어있지만 넘어옴)는 허용한다.
+const OPTIONAL_EMPTY_ENV = new Set(["ISSUE_BODY"]);
+
 function requireEnv(): Record<(typeof REQUIRED_ENV)[number], string> {
-  const missing = REQUIRED_ENV.filter((key) => !process.env[key]);
+  const missing = REQUIRED_ENV.filter((key) =>
+    OPTIONAL_EMPTY_ENV.has(key)
+      ? process.env[key] === undefined
+      : !process.env[key]
+  );
   if (missing.length > 0) {
     throw new Error(`Missing env: ${missing.join(", ")}`);
   }
