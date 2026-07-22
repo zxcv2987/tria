@@ -5,10 +5,14 @@ function extractTaskGid(taskIdOrUrl: string): string {
   return trimmed;
 }
 
+type AsanaEnumOption = { gid: string; name: string };
+
 type AsanaCustomField = {
+  gid?: string;
   name?: string;
   display_value?: string | null;
   enum_value?: { name?: string } | null;
+  enum_options?: AsanaEnumOption[];
 };
 
 type AsanaTaskData = {
@@ -56,9 +60,12 @@ export async function fetchAsanaTaskDetails(
     "notes",
     "permalink_url",
     "modified_at",
+    "custom_fields.gid",
     "custom_fields.name",
     "custom_fields.display_value",
     "custom_fields.enum_value.name",
+    "custom_fields.enum_options.gid",
+    "custom_fields.enum_options.name",
     "projects.gid",
   ].join(",");
 
@@ -91,4 +98,84 @@ export async function fetchAsanaTask(
 ): Promise<{ title: string; body: string }> {
   const task = await fetchAsanaTaskDetails(taskIdOrUrl);
   return { title: task.title, body: task.body };
+}
+
+async function findStatusFieldMapping(
+  taskGid: string,
+  pat: string
+): Promise<{ fieldGid: string; options: AsanaEnumOption[] } | null> {
+  const res = await fetch(
+    `https://app.asana.com/api/1.0/tasks/${taskGid}?opt_fields=custom_fields.gid,custom_fields.name,custom_fields.enum_options.gid,custom_fields.enum_options.name`,
+    { headers: { Authorization: `Bearer ${pat}` } }
+  );
+  if (!res.ok) {
+    throw new Error(`Asana Task 조회 실패 (${res.status}): ${taskGid}`);
+  }
+  const json = (await res.json()) as {
+    data: { custom_fields?: AsanaCustomField[] };
+  };
+  const field = (json.data.custom_fields ?? []).find(
+    (f) => typeof f.name === "string" && /이슈\s*상태/.test(f.name)
+  );
+  if (!field?.gid) return null;
+  return { fieldGid: field.gid, options: field.enum_options ?? [] };
+}
+
+/** "이슈 상태" 커스텀 필드를 지정한 라벨(예: "개발 검토")로 갱신한다 (문서 5.1/5.3). */
+export async function updateAsanaTaskStatus(
+  taskIdOrUrl: string,
+  statusLabel: string
+): Promise<void> {
+  const pat = process.env.ASANA_PAT;
+  if (!pat) throw new Error("ASANA_PAT 환경변수가 설정되지 않았습니다.");
+
+  const taskGid = extractTaskGid(taskIdOrUrl);
+  const mapping = await findStatusFieldMapping(taskGid, pat);
+  if (!mapping) {
+    throw new Error('"이슈 상태" 커스텀 필드를 찾지 못했습니다.');
+  }
+
+  const option = mapping.options.find((o) => o.name === statusLabel);
+  if (!option) {
+    throw new Error(`"이슈 상태"에 "${statusLabel}" 옵션이 없습니다.`);
+  }
+
+  const res = await fetch(`https://app.asana.com/api/1.0/tasks/${taskGid}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${pat}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      data: { custom_fields: { [mapping.fieldGid]: option.gid } },
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`Asana 상태 갱신 실패 (${res.status}): ${taskIdOrUrl}`);
+  }
+}
+
+/** 태스크에 댓글(스토리)을 추가한다 (문서 16장 — Asana 결과 표시). */
+export async function addAsanaComment(
+  taskIdOrUrl: string,
+  text: string
+): Promise<void> {
+  const pat = process.env.ASANA_PAT;
+  if (!pat) throw new Error("ASANA_PAT 환경변수가 설정되지 않았습니다.");
+
+  const taskGid = extractTaskGid(taskIdOrUrl);
+  const res = await fetch(
+    `https://app.asana.com/api/1.0/tasks/${taskGid}/stories`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${pat}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ data: { text } }),
+    }
+  );
+  if (!res.ok) {
+    throw new Error(`Asana 댓글 작성 실패 (${res.status}): ${taskIdOrUrl}`);
+  }
 }
