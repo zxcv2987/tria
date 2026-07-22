@@ -24,7 +24,17 @@ export const geminiProvider: AnalysisProvider = {
   async run(prompt: string, repositoryPath: string): Promise<unknown> {
     const { stdout } = await execFileAsync(
       "npx",
-      ["--yes", "@google/gemini-cli", "-p", prompt, "--approval-mode", "plan"],
+      [
+        "--yes",
+        "@google/gemini-cli",
+        "-p",
+        prompt,
+        "--approval-mode",
+        "plan",
+        // GitHub Actions처럼 매번 새로 checkout되는 폴더는 Gemini CLI의
+        // trusted-folder 검사를 통과 못 해서 헤드리스 실행이 막힌다.
+        "--skip-trust",
+      ],
       {
         cwd: repositoryPath,
         timeout: 5 * 60 * 1000,
