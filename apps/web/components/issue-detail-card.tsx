@@ -22,6 +22,15 @@ const FEEDBACK_OPTIONS = [
   { value: "WRONG", label: "잘못된 분석" },
 ] as const;
 
+const RESULT_BADGE_CLASS: Record<AnalysisResultType["result"], string> = {
+  CODE_LIKELY:
+    "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+  CHECK_EXTERNAL:
+    "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300",
+  NEED_MORE_INFO:
+    "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+};
+
 function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="flex flex-col gap-1">
@@ -29,6 +38,29 @@ function Field({ label, value }: { label: string; value: string | null }) {
       <p className="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
         {value?.trim() ? value : "-"}
       </p>
+    </div>
+  );
+}
+
+function StringList({
+  label,
+  items,
+}: {
+  label: string;
+  items: string[];
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-xs font-semibold text-zinc-500">{label}</h3>
+      {items.length === 0 ? (
+        <p className="text-sm text-zinc-500">-</p>
+      ) : (
+        <ul className="list-disc pl-5 text-sm text-zinc-600 dark:text-zinc-400">
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -44,11 +76,20 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
       ? [
           `판정: ${analysisResult.result}`,
           analysisResult.summary,
-          ...analysisResult.evidence.map((e) => `- ${e.path}: ${e.reason}`),
+          analysisResult.suspectedArea
+            ? `의심 영역: ${analysisResult.suspectedArea}`
+            : null,
+          ...analysisResult.evidence.map(
+            (e) =>
+              `- ${e.path}${e.symbol ? ` (${e.symbol})` : ""}: ${e.reason}`,
+          ),
           ...analysisResult.externalChecks.map((c) => `점검: ${c}`),
+          ...analysisResult.missingInformation.map((m) => `누락: ${m}`),
           ...analysisResult.limitations.map((l) => `한계: ${l}`),
-        ].join("\n")
-      : run?.summary ?? issue.title;
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : (run?.summary ?? issue.title);
     await navigator.clipboard.writeText(text);
     window.alert("분석 결과를 복사했습니다.");
   }
@@ -58,7 +99,16 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
     window.alert(`피드백(${value})은 API 연동 후 저장됩니다.`);
   }
 
-  const isCandidate = analysisResult?.result === "CODE_LIKELY";
+  const evidence = analysisResult?.evidence ?? run?.evidence ?? [];
+  const externalChecks =
+    analysisResult?.externalChecks ?? run?.externalChecks ?? [];
+  const missingInformation =
+    analysisResult?.missingInformation ?? run?.missingInformation ?? [];
+  const limitations = analysisResult?.limitations ?? run?.limitations ?? [];
+  const suspectedArea =
+    analysisResult?.suspectedArea ?? run?.suspectedArea ?? null;
+  const summary = analysisResult?.summary ?? run?.summary ?? null;
+  const resultType = analysisResult?.result ?? run?.resultType ?? null;
 
   return (
     <div className="flex flex-col gap-8">
@@ -141,41 +191,30 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
 
         {run && (
           <>
-            <Field
-              label="판정"
-              value={
-                run.resultType ? RESULT_TYPE_LABEL[run.resultType] : "진행 중"
-              }
-            />
-
-            {/* @tria/analysis AnalysisResult 기반 표시 */}
-            {analysisResult && (
-              <div className="flex flex-col gap-4">
-                <span
-                  className={`w-fit rounded-full px-3 py-1 text-xs font-medium ${
-                    isCandidate
-                      ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                      : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                  }`}
-                >
-                  {isCandidate ? "코드 원인 후보 발견" : "추가 점검 필요"}
-                </span>
-                <Field label="요약" value={analysisResult.summary} />
-              </div>
+            {resultType ? (
+              <span
+                className={`w-fit rounded-full px-3 py-1 text-xs font-medium ${RESULT_BADGE_CLASS[resultType]}`}
+              >
+                {RESULT_TYPE_LABEL[resultType]}
+              </span>
+            ) : (
+              <Field label="판정" value="진행 중" />
             )}
 
-            <Field label="의심 영역" value={run.suspectedArea} />
+            <Field label="요약" value={summary} />
+            <Field label="의심 영역" value={suspectedArea} />
 
             <div className="flex flex-col gap-2">
               <h3 className="text-xs font-semibold text-zinc-500">관련 파일</h3>
-              {run.evidence.length === 0 ? (
+              {evidence.length === 0 ? (
                 <p className="text-sm text-zinc-500">-</p>
               ) : (
                 <ul className="flex flex-col gap-2">
-                  {run.evidence.map((e) => (
+                  {evidence.map((e) => (
                     <li key={`${e.path}-${e.symbol ?? ""}`} className="text-sm">
                       <code className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">
                         {e.path}
+                        {e.symbol ? ` · ${e.symbol}` : ""}
                       </code>
                       <p className="mt-1 text-zinc-600 dark:text-zinc-400">
                         {e.reason}
@@ -190,9 +229,9 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
               <h3 className="text-xs font-semibold text-zinc-500">
                 관련 함수 / 심볼
               </h3>
-              {run.evidence.some((e) => e.symbol) ? (
+              {evidence.some((e) => e.symbol) ? (
                 <ul className="list-disc pl-5 text-sm text-zinc-600 dark:text-zinc-400">
-                  {run.evidence
+                  {evidence
                     .filter((e) => e.symbol)
                     .map((e) => (
                       <li key={`${e.path}:${e.symbol}`}>
@@ -206,61 +245,13 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
               )}
             </div>
 
-            <div className="flex flex-col gap-2">
-              <h3 className="text-xs font-semibold text-zinc-500">코드 근거</h3>
-              {run.evidence.length === 0 ? (
-                <p className="text-sm text-zinc-500">-</p>
-              ) : (
-                <ul className="list-disc pl-5 text-sm text-zinc-600 dark:text-zinc-400">
-                  {run.evidence.map((e) => (
-                    <li key={`ev-${e.path}`}>{e.reason}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <h3 className="text-xs font-semibold text-zinc-500">
-                추가 점검 항목
-              </h3>
-              {(analysisResult?.externalChecks ?? run.externalChecks).length ===
-              0 ? (
-                <p className="text-sm text-zinc-500">-</p>
-              ) : (
-                <ul className="list-disc pl-5 text-sm text-zinc-600 dark:text-zinc-400">
-                  {(analysisResult?.externalChecks ?? run.externalChecks).map(
-                    (c) => (
-                      <li key={c}>{c}</li>
-                    ),
-                  )}
-                </ul>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <h3 className="text-xs font-semibold text-zinc-500">누락 정보</h3>
-              {(analysisResult?.missingInformation ?? run.missingInformation)
-                .length === 0 ? (
-                <p className="text-sm text-zinc-500">-</p>
-              ) : (
-                <ul className="list-disc pl-5 text-sm text-zinc-600 dark:text-zinc-400">
-                  {(
-                    analysisResult?.missingInformation ?? run.missingInformation
-                  ).map((m) => (
-                    <li key={m}>{m}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <Field
-              label="분석 한계"
-              value={
-                (analysisResult?.limitations ?? run.limitations).length > 0
-                  ? (analysisResult?.limitations ?? run.limitations).join("\n")
-                  : null
-              }
+            <StringList
+              label="코드 근거"
+              items={evidence.map((e) => e.reason)}
             />
+            <StringList label="추가 점검 항목" items={externalChecks} />
+            <StringList label="누락 정보" items={missingInformation} />
+            <StringList label="분석 한계" items={limitations} />
 
             <Field
               label="분석 대상 저장소와 커밋"

@@ -1,6 +1,9 @@
-import type { AnalysisResult } from "@tria/analysis";
+import type {
+  AnalysisEvidence,
+  AnalysisResult,
+} from "@tria/analysis";
 
-// 문서 12장 형태 — UI mock 전용 (packages 미수정)
+// 문서 12장 형태 — UI mock 전용
 export type Issue = {
   id: string;
   asanaTaskGid: string;
@@ -20,17 +23,11 @@ export type Issue = {
   attachments: string[];
 };
 
-export type AnalysisEvidence = {
-  path: string;
-  symbol?: string;
-  reason: string;
-};
-
 export type AnalysisRun = {
   id: string;
   issueId: string;
   status: "QUEUED" | "RUNNING" | "SUCCEEDED" | "FAILED";
-  resultType: "CODE_LIKELY" | "CHECK_EXTERNAL" | "NEED_MORE_INFO" | null;
+  resultType: AnalysisResult["result"] | null;
   targetRepository: string;
   targetRef: string;
   targetCommitSha: string | null;
@@ -250,7 +247,7 @@ export function getProjectName(projectKey: string): string {
   return MOCK_PROJECTS.find((p) => p.key === projectKey)?.name ?? projectKey;
 }
 
-/** AnalysisRun → @tria/analysis AnalysisResult (결과 표시용) */
+/** AnalysisRun → @tria/analysis AnalysisResult (결과 표시용, resultType 그대로) */
 export function toAnalysisResult(run: AnalysisRun): AnalysisResult | null {
   if (!run.resultType || !run.summary) return null;
   return {
