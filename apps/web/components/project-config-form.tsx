@@ -2,6 +2,31 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import type { ProjectConfig } from "./mock-data";
+import { ActiveBadge } from "@/components/status-badges";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  btnGhostClass,
+  btnPrimaryClass,
+  cardClass,
+  fieldLabelClass,
+  helpTextClass,
+  inputClass,
+  sectionTitleClass,
+  tableCellClass,
+  tableClass,
+  tableHeadCellClass,
+  tableHeadClass,
+  tableRowClass,
+  tableWrapClass,
+} from "@/components/ui/styles";
+
+const REPO_NONE = "__none__";
 
 type RepoOption = { owner: string; repo: string };
 type AsanaProjectOption = { gid: string; name: string };
@@ -119,46 +144,45 @@ export function ProjectConfigForm({ initialProjects }: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-        <table className="w-full min-w-[48rem] text-left text-sm">
-          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className={tableWrapClass}>
+        <table className={`${tableClass} min-w-[48rem]`}>
+          <thead className={tableHeadClass}>
             <tr>
-              <th className="px-3 py-2 font-medium">키</th>
-              <th className="px-3 py-2 font-medium">표시 이름</th>
-              <th className="px-3 py-2 font-medium">Asana 프로젝트</th>
-              <th className="px-3 py-2 font-medium">GitHub 저장소</th>
-              <th className="px-3 py-2 font-medium">기본 브랜치</th>
-              <th className="px-3 py-2 font-medium">활성화</th>
-              <th className="px-3 py-2 font-medium" />
+              <th className={tableHeadCellClass}>키</th>
+              <th className={tableHeadCellClass}>표시 이름</th>
+              <th className={tableHeadCellClass}>Asana 프로젝트</th>
+              <th className={tableHeadCellClass}>GitHub 저장소</th>
+              <th className={tableHeadCellClass}>기본 브랜치</th>
+              <th className={tableHeadCellClass}>활성화</th>
+              <th className={tableHeadCellClass} />
             </tr>
           </thead>
           <tbody>
             {projects.map((p) => (
-              <tr
-                key={p.id}
-                className="border-b border-zinc-100 last:border-0 dark:border-zinc-900"
-              >
-                <td className="px-3 py-2 font-mono text-xs">{p.key}</td>
-                <td className="px-3 py-2">{p.name}</td>
-                <td className="px-3 py-2">{p.asanaProjectValue}</td>
-                <td className="px-3 py-2 font-mono text-xs">
+              <tr key={p.id} className={tableRowClass}>
+                <td className={`${tableCellClass} font-mono text-xs`}>{p.key}</td>
+                <td className={tableCellClass}>{p.name}</td>
+                <td className={tableCellClass}>{p.asanaProjectValue}</td>
+                <td className={`${tableCellClass} font-mono text-xs`}>
                   {p.githubOwner}/{p.githubRepository}
                 </td>
-                <td className="px-3 py-2">{p.defaultRef}</td>
-                <td className="px-3 py-2">{p.isActive ? "활성" : "비활성"}</td>
-                <td className="px-3 py-2">
-                  <div className="flex gap-3">
+                <td className={tableCellClass}>{p.defaultRef}</td>
+                <td className={tableCellClass}>
+                  <ActiveBadge active={p.isActive} />
+                </td>
+                <td className={tableCellClass}>
+                  <div className="flex gap-1">
                     <button
                       type="button"
                       onClick={() => startEdit(p)}
-                      className="text-sm underline-offset-2 hover:underline"
+                      className={btnGhostClass}
                     >
                       수정
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(p.id)}
-                      className="text-sm text-red-600 underline-offset-2 hover:underline dark:text-red-400"
+                      className="inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600/10 dark:text-red-400 dark:hover:bg-red-950"
                     >
                       삭제
                     </button>
@@ -172,18 +196,14 @@ export function ProjectConfigForm({ initialProjects }: Props) {
 
       <form
         onSubmit={handleSubmit}
-        className="flex max-w-xl flex-col gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
+        className={`${cardClass} flex max-w-xl flex-col gap-4`}
       >
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold">
+          <h2 className={sectionTitleClass}>
             {editingId ? "프로젝트 설정 수정" : "프로젝트 설정 추가"}
           </h2>
           {editingId && (
-            <button
-              type="button"
-              onClick={startCreate}
-              className="text-sm text-zinc-500 underline-offset-2 hover:underline"
-            >
+            <button type="button" onClick={startCreate} className={btnGhostClass}>
               새로 추가
             </button>
           )}
@@ -201,11 +221,8 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             ["defaultRef", "기본 브랜치", "main"],
           ] as const
         ).map(([field, label, placeholder]) => (
-          <div key={field} className="flex flex-col gap-1">
-            <label
-              htmlFor={field}
-              className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            >
+          <div key={field} className="flex flex-col gap-2">
+            <label htmlFor={field} className={fieldLabelClass}>
               {label}
             </label>
             <input
@@ -215,40 +232,40 @@ export function ProjectConfigForm({ initialProjects }: Props) {
                 setForm((prev) => ({ ...prev, [field]: e.target.value }))
               }
               placeholder={placeholder}
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              className={inputClass}
             />
           </div>
         ))}
 
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="asanaProject"
-            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
-          >
+        <div className="flex flex-col gap-2">
+          <label htmlFor="asanaProject" className={fieldLabelClass}>
             Asana 프로젝트
           </label>
           {asanaProjectOptions.length > 0 ? (
-            <select
-              id="asanaProject"
-              value={form.asanaProjectValue}
-              onChange={(e) =>
+            <Select
+              value={form.asanaProjectValue || REPO_NONE}
+              onValueChange={(value) =>
                 setForm((prev) => ({
                   ...prev,
-                  asanaProjectValue: e.target.value,
+                  asanaProjectValue: value === REPO_NONE ? "" : value,
                 }))
               }
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
             >
-              <option value="">선택하세요</option>
-              {asanaProjectOptions.map(({ gid, name }) => (
-                <option key={gid} value={gid}>
-                  {name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="asanaProject" className="h-9 w-full">
+                <SelectValue placeholder="선택하세요" />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                <SelectItem value={REPO_NONE}>선택하세요</SelectItem>
+                {asanaProjectOptions.map(({ gid, name }) => (
+                  <SelectItem key={gid} value={gid}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           ) : (
             <>
-              <p className="text-xs text-zinc-500">
+              <p className={helpTextClass}>
                 프로젝트 목록을 못 불러와서 GID 직접 입력으로 대체합니다.
               </p>
               <input
@@ -261,40 +278,55 @@ export function ProjectConfigForm({ initialProjects }: Props) {
                   }))
                 }
                 placeholder="1216772744613005"
-                className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                className={inputClass}
               />
             </>
           )}
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="githubRepo"
-            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
-          >
+        <div className="flex flex-col gap-2">
+          <label htmlFor="githubRepo" className={fieldLabelClass}>
             GitHub 저장소
           </label>
           {repoOptions.length > 0 ? (
-            <select
-              id="githubRepo"
+            <Select
               value={
                 form.githubOwner && form.githubRepository
                   ? `${form.githubOwner}/${form.githubRepository}`
-                  : ""
+                  : REPO_NONE
               }
-              onChange={(e) => handleRepoSelect(e.target.value)}
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              onValueChange={(value) => {
+                if (value === REPO_NONE) {
+                  setForm((prev) => ({
+                    ...prev,
+                    githubOwner: "",
+                    githubRepository: "",
+                  }));
+                  return;
+                }
+                handleRepoSelect(value);
+              }}
             >
-              <option value="">선택하세요 (App이 설치된 저장소만 표시)</option>
-              {repoOptions.map(({ owner, repo }) => (
-                <option key={`${owner}/${repo}`} value={`${owner}/${repo}`}>
-                  {owner}/{repo}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="githubRepo" className="h-9 w-full">
+                <SelectValue placeholder="선택하세요 (App이 설치된 저장소만 표시)" />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                <SelectItem value={REPO_NONE}>
+                  선택하세요 (App이 설치된 저장소만 표시)
+                </SelectItem>
+                {repoOptions.map(({ owner, repo }) => (
+                  <SelectItem
+                    key={`${owner}/${repo}`}
+                    value={`${owner}/${repo}`}
+                  >
+                    {owner}/{repo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           ) : (
             <>
-              <p className="text-xs text-zinc-500">
+              <p className={helpTextClass}>
                 설치된 저장소 목록을 못 불러와서 직접 입력으로 대체합니다.
               </p>
               <div className="flex gap-2">
@@ -304,7 +336,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
                     setForm((prev) => ({ ...prev, githubOwner: e.target.value }))
                   }
                   placeholder="tria-org"
-                  className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                  className={inputClass}
                 />
                 <input
                   value={form.githubRepository}
@@ -315,29 +347,27 @@ export function ProjectConfigForm({ initialProjects }: Props) {
                     }))
                   }
                   placeholder="classroom-web"
-                  className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                  className={inputClass}
                 />
               </div>
             </>
           )}
         </div>
 
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2.5 text-sm text-zinc-700 dark:text-zinc-300">
           <input
             type="checkbox"
             checked={form.isActive}
             onChange={(e) =>
               setForm((prev) => ({ ...prev, isActive: e.target.checked }))
             }
+            className="size-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900/20 dark:border-zinc-600"
           />
           활성화
         </label>
 
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="analysisPrompt"
-            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
-          >
+        <div className="flex flex-col gap-2">
+          <label htmlFor="analysisPrompt" className={fieldLabelClass}>
             분석 프롬프트 설정
           </label>
           <textarea
@@ -350,14 +380,11 @@ export function ProjectConfigForm({ initialProjects }: Props) {
               }))
             }
             rows={4}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            className={`${inputClass} resize-y`}
           />
         </div>
 
-        <button
-          type="submit"
-          className="self-start rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-        >
+        <button type="submit" className={`${btnPrimaryClass} self-start`}>
           {editingId ? "저장" : "추가"}
         </button>
       </form>

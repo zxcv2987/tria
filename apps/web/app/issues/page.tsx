@@ -1,36 +1,34 @@
 import Link from "next/link";
 import { IssueListTable } from "@/components/issue-list-table";
 import { fetchIssuesPageData } from "@/lib/app-data";
+import { PageHeader, PageShell } from "@/components/ui/page";
+import { btnGhostClass, linkClass } from "@/components/ui/styles";
 
 export default async function IssuesPage() {
   const { issues, runs, projects } = await fetchIssuesPageData();
 
   return (
-    <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-black">
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-sm text-zinc-500">
-              <Link href="/" className="hover:underline">
-                Tria
-              </Link>
-              {" / "}
-              이슈
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-              이슈 목록
-            </h1>
-          </div>
-          <Link
-            href="/settings/projects"
-            className="text-sm text-zinc-600 underline-offset-2 hover:underline dark:text-zinc-300"
-          >
+    <PageShell width="wide">
+      <PageHeader
+        breadcrumb={
+          <>
+            <Link href="/" className={linkClass}>
+              Tria
+            </Link>
+            {" / "}
+            이슈
+          </>
+        }
+        title="이슈 목록"
+        description="프로젝트별 이슈와 분석 상태를 한눈에 확인합니다."
+        actions={
+          <Link href="/settings/projects" className={btnGhostClass}>
             프로젝트 설정
           </Link>
-        </div>
+        }
+      />
 
-        <IssueListTable issues={issues} runs={runs} projects={projects} />
-      </main>
-    </div>
+      <IssueListTable issues={issues} runs={runs} projects={projects} />
+    </PageShell>
   );
 }

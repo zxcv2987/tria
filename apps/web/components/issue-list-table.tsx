@@ -12,6 +12,32 @@ import {
   type Issue,
   type ProjectConfig,
 } from "./mock-data";
+import {
+  AnalysisStatusBadge,
+  AsanaStatusBadge,
+  ResultBadge,
+} from "@/components/status-badges";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  helpTextClass,
+  inputClass,
+  linkClass,
+  metricCardClass,
+  tableCellClass,
+  tableClass,
+  tableHeadCellClass,
+  tableHeadClass,
+  tableRowClass,
+  tableWrapClass,
+} from "@/components/ui/styles";
+
+const ALL = "__all__";
 
 type Props = {
   issues: Issue[];
@@ -91,87 +117,97 @@ export function IssueListTable({ issues, runs, projects }: Props) {
             ["failed", "분석 실패", metrics.failed],
           ] as const
         ).map(([key, label, count]) => (
-          <div
-            key={key}
-            className="rounded-lg border border-zinc-200 px-3 py-3 dark:border-zinc-800"
-          >
-            <p className="text-xs text-zinc-500">{label}</p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums">{count}</p>
+          <div key={key} className={metricCardClass}>
+            <p className={helpTextClass}>{label}</p>
+            <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-zinc-900 dark:text-zinc-50">
+              {count}
+            </p>
           </div>
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <select
-          value={project}
-          onChange={(e) => setProject(e.target.value)}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          aria-label="프로젝트 필터"
+      <div className="flex flex-wrap gap-2.5">
+        <Select
+          value={project || ALL}
+          onValueChange={(value) => setProject(value === ALL ? "" : value)}
         >
-          <option value="">전체 프로젝트</option>
-          {projectKeys.map((key) => (
-            <option key={key} value={key}>
-              {getProjectName(projects, key)}
-            </option>
-          ))}
-        </select>
-        <select
-          value={analysisStatus}
-          onChange={(e) => setAnalysisStatus(e.target.value)}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          aria-label="분석 상태 필터"
+          <SelectTrigger className="h-9 min-w-[10rem]" aria-label="프로젝트 필터">
+            <SelectValue placeholder="전체 프로젝트" />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            <SelectItem value={ALL}>전체 프로젝트</SelectItem>
+            {projectKeys.map((key) => (
+              <SelectItem key={key} value={key}>
+                {getProjectName(projects, key)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={analysisStatus || ALL}
+          onValueChange={(value) =>
+            setAnalysisStatus(value === ALL ? "" : value)
+          }
         >
-          <option value="">전체 분석 상태</option>
-          {Object.entries(ANALYSIS_STATUS_LABEL).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={resultType}
-          onChange={(e) => setResultType(e.target.value)}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          aria-label="AI 판정 필터"
+          <SelectTrigger className="h-9 min-w-[10rem]" aria-label="분석 상태 필터">
+            <SelectValue placeholder="전체 분석 상태" />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            <SelectItem value={ALL}>전체 분석 상태</SelectItem>
+            {Object.entries(ANALYSIS_STATUS_LABEL).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={resultType || ALL}
+          onValueChange={(value) => setResultType(value === ALL ? "" : value)}
         >
-          <option value="">전체 AI 판정</option>
-          {Object.entries(RESULT_TYPE_LABEL).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="h-9 min-w-[10rem]" aria-label="AI 판정 필터">
+            <SelectValue placeholder="전체 AI 판정" />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            <SelectItem value={ALL}>전체 AI 판정</SelectItem>
+            {Object.entries(RESULT_TYPE_LABEL).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="제목 검색"
-          className="min-w-[12rem] flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className={`${inputClass} h-9 min-w-[12rem] flex-1 py-0`}
         />
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-        <table className="w-full min-w-[56rem] text-left text-sm">
-          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className={tableWrapClass}>
+        <table className={`${tableClass} min-w-[56rem]`}>
+          <thead className={tableHeadClass}>
             <tr>
-              <th className="px-3 py-2 font-medium">이슈 제목</th>
-              <th className="px-3 py-2 font-medium">프로젝트</th>
-              <th className="px-3 py-2 font-medium">Asana 상태</th>
-              <th className="px-3 py-2 font-medium">분석 상태</th>
-              <th className="px-3 py-2 font-medium">AI 판정</th>
-              <th className="px-3 py-2 font-medium">등록 시각</th>
-              <th className="px-3 py-2 font-medium">최근 분석 시각</th>
-              <th className="px-3 py-2 font-medium">Asana</th>
+              <th className={tableHeadCellClass}>이슈 제목</th>
+              <th className={tableHeadCellClass}>프로젝트</th>
+              <th className={tableHeadCellClass}>Asana 상태</th>
+              <th className={tableHeadCellClass}>분석 상태</th>
+              <th className={tableHeadCellClass}>AI 판정</th>
+              <th className={tableHeadCellClass}>등록 시각</th>
+              <th className={tableHeadCellClass}>최근 분석 시각</th>
+              <th className={tableHeadCellClass}>Asana</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((issue) => {
               const run = getLatestRun(runs, issue.id);
               return (
-                <tr
-                  key={issue.id}
-                  className="border-b border-zinc-100 last:border-0 dark:border-zinc-900"
-                >
-                  <td className="px-3 py-2">
+                <tr key={issue.id} className={tableRowClass}>
+                  <td className={tableCellClass}>
                     <Link
                       href={`/issues/${issue.id}`}
                       className="font-medium text-zinc-900 underline-offset-2 hover:underline dark:text-zinc-100"
@@ -179,26 +215,34 @@ export function IssueListTable({ issues, runs, projects }: Props) {
                       {issue.title}
                     </Link>
                   </td>
-                  <td className="px-3 py-2">
+                  <td className={`${tableCellClass} text-zinc-700 dark:text-zinc-300`}>
                     {getProjectName(projects, issue.projectKey)}
                   </td>
-                  <td className="px-3 py-2">{issue.asanaStatus}</td>
-                  <td className="px-3 py-2">
-                    {run ? ANALYSIS_STATUS_LABEL[run.status] : "-"}
+                  <td className={tableCellClass}>
+                    <AsanaStatusBadge status={issue.asanaStatus} />
                   </td>
-                  <td className="px-3 py-2">
-                    {run?.resultType ? RESULT_TYPE_LABEL[run.resultType] : "-"}
+                  <td className={tableCellClass}>
+                    {run ? <AnalysisStatusBadge status={run.status} /> : "-"}
                   </td>
-                  <td className="px-3 py-2">{formatDateTime(issue.createdAt)}</td>
-                  <td className="px-3 py-2">
+                  <td className={tableCellClass}>
+                    {run?.resultType ? (
+                      <ResultBadge result={run.resultType} />
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td className={`${tableCellClass} whitespace-nowrap text-zinc-600 dark:text-zinc-400`}>
+                    {formatDateTime(issue.createdAt)}
+                  </td>
+                  <td className={`${tableCellClass} whitespace-nowrap text-zinc-600 dark:text-zinc-400`}>
                     {formatDateTime(run?.finishedAt ?? run?.startedAt)}
                   </td>
-                  <td className="px-3 py-2">
+                  <td className={tableCellClass}>
                     <a
                       href={issue.asanaUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-zinc-600 underline-offset-2 hover:underline dark:text-zinc-300"
+                      className={linkClass}
                     >
                       열기
                     </a>
@@ -210,7 +254,7 @@ export function IssueListTable({ issues, runs, projects }: Props) {
               <tr>
                 <td
                   colSpan={8}
-                  className="px-3 py-8 text-center text-zinc-500"
+                  className={`${tableCellClass} py-10 text-center text-zinc-500 dark:text-zinc-400`}
                 >
                   조건에 맞는 이슈가 없습니다.
                 </td>

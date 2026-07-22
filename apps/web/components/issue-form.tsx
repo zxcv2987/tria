@@ -1,6 +1,14 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import {
+  btnPrimaryClass,
+  btnSecondaryClass,
+  cardClass,
+  errorTextClass,
+  fieldLabelClass,
+  inputClass,
+} from "@/components/ui/styles";
 
 type IssueFormProps = {
   onSubmit: (input: { title: string; body: string }) => void;
@@ -51,40 +59,33 @@ export function IssueForm({ onSubmit, disabled }: IssueFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <label
-          htmlFor="asana-task"
-          className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
-        >
+    <form onSubmit={handleSubmit} className={`${cardClass} flex flex-col gap-5`}>
+      <div className="flex flex-col gap-2">
+        <label htmlFor="asana-task" className={fieldLabelClass}>
           Asana Task ID 또는 URL (선택)
         </label>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <input
             id="asana-task"
             value={asanaInput}
             onChange={(e) => setAsanaInput(e.target.value)}
             placeholder="예: 1216781303618826 또는 Asana URL"
-            className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            className={inputClass}
           />
           <button
             type="button"
             onClick={handleFetchAsana}
             disabled={asanaLoading || !asanaInput.trim()}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-100"
+            className={`${btnSecondaryClass} shrink-0`}
           >
             {asanaLoading ? "불러오는 중..." : "불러오기"}
           </button>
         </div>
-        {asanaError && (
-          <p className="text-sm text-red-600 dark:text-red-400">{asanaError}</p>
-        )}
+        {asanaError && <p className={errorTextClass}>{asanaError}</p>}
       </div>
-      <div className="flex flex-col gap-1">
-        <label
-          htmlFor="issue-title"
-          className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
-        >
+
+      <div className="flex flex-col gap-2">
+        <label htmlFor="issue-title" className={fieldLabelClass}>
           이슈 제목
         </label>
         <input
@@ -92,14 +93,12 @@ export function IssueForm({ onSubmit, disabled }: IssueFormProps) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="예: 강의 수정 후 목록이 갱신되지 않음"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className={inputClass}
         />
       </div>
-      <div className="flex flex-col gap-1">
-        <label
-          htmlFor="issue-body"
-          className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
-        >
+
+      <div className="flex flex-col gap-2">
+        <label htmlFor="issue-body" className={fieldLabelClass}>
           이슈 내용
         </label>
         <textarea
@@ -108,14 +107,11 @@ export function IssueForm({ onSubmit, disabled }: IssueFormProps) {
           onChange={(e) => setBody(e.target.value)}
           rows={8}
           placeholder="이슈 상세 내용을 입력하세요"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className={`${inputClass} min-h-[12rem] resize-y`}
         />
       </div>
-      <button
-        type="submit"
-        disabled={disabled}
-        className="self-start rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-      >
+
+      <button type="submit" disabled={disabled} className={`${btnPrimaryClass} self-start`}>
         {disabled ? "분석 중..." : "분석"}
       </button>
     </form>
