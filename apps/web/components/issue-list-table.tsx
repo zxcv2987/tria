@@ -14,7 +14,6 @@ import {
 } from "./mock-data";
 import {
   AnalysisStatusBadge,
-  AsanaStatusBadge,
   ResultBadge,
 } from "@/components/status-badges";
 import {
@@ -52,20 +51,12 @@ type MetricKey =
   | "needInfo"
   | "failed";
 
-function metricFor(issue: Issue, run: AnalysisRun | undefined): MetricKey | null {
+function metricFor(_issue: Issue, run: AnalysisRun | undefined): MetricKey | null {
   if (run?.status === "QUEUED") return "queued";
   if (run?.status === "RUNNING") return "running";
-  if (run?.status === "FAILED" || issue.asanaStatus === "분석 실패")
-    return "failed";
-  if (
-    run?.resultType === "NEED_MORE_INFO" ||
-    issue.asanaStatus === "추가 정보 필요"
-  )
-    return "needInfo";
-  if (run?.resultType === "CODE_LIKELY" || issue.asanaStatus === "개발 검토")
-    return "review";
-  if (issue.asanaStatus === "AI 분석 요청") return "queued";
-  if (issue.asanaStatus === "AI 분석 중") return "running";
+  if (run?.status === "FAILED") return "failed";
+  if (run?.resultType === "NEED_MORE_INFO") return "needInfo";
+  if (run?.resultType === "CODE_LIKELY") return "review";
   return null;
 }
 
@@ -194,12 +185,11 @@ export function IssueListTable({ issues, runs, projects }: Props) {
             <tr>
               <th className={tableHeadCellClass}>이슈 제목</th>
               <th className={tableHeadCellClass}>프로젝트</th>
-              <th className={tableHeadCellClass}>Asana 상태</th>
+              <th className={tableHeadCellClass}>원본</th>
               <th className={tableHeadCellClass}>분석 상태</th>
               <th className={tableHeadCellClass}>AI 판정</th>
               <th className={tableHeadCellClass}>등록 시각</th>
               <th className={tableHeadCellClass}>최근 분석 시각</th>
-              <th className={tableHeadCellClass}>Asana</th>
             </tr>
           </thead>
           <tbody>
@@ -219,7 +209,20 @@ export function IssueListTable({ issues, runs, projects }: Props) {
                     {getProjectName(projects, issue.projectKey)}
                   </td>
                   <td className={tableCellClass}>
-                    <AsanaStatusBadge status={issue.asanaStatus} />
+                    {issue.externalUrl ? (
+                      <a
+                        href={issue.externalUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={linkClass}
+                      >
+                        {issue.source}
+                      </a>
+                    ) : (
+                      <span className="text-zinc-600 dark:text-zinc-400">
+                        {issue.source}
+                      </span>
+                    )}
                   </td>
                   <td className={tableCellClass}>
                     {run ? <AnalysisStatusBadge status={run.status} /> : "-"}
@@ -237,23 +240,13 @@ export function IssueListTable({ issues, runs, projects }: Props) {
                   <td className={`${tableCellClass} whitespace-nowrap text-zinc-600 dark:text-zinc-400`}>
                     {formatDateTime(run?.finishedAt ?? run?.startedAt)}
                   </td>
-                  <td className={tableCellClass}>
-                    <a
-                      href={issue.asanaUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={linkClass}
-                    >
-                      열기
-                    </a>
-                  </td>
                 </tr>
               );
             })}
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={7}
                   className={`${tableCellClass} py-10 text-center text-zinc-500 dark:text-zinc-400`}
                 >
                   조건에 맞는 이슈가 없습니다.

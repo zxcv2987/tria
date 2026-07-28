@@ -10,8 +10,9 @@ import {
 
 type IssueRow = {
   id: string;
-  asana_task_gid: string;
-  asana_url: string;
+  source: string;
+  external_ref: string | null;
+  external_url: string | null;
   title: string;
   description: string;
   project_key: string;
@@ -20,8 +21,6 @@ type IssueRow = {
   reproduction_steps: string | null;
   expected_result: string | null;
   actual_result: string | null;
-  asana_status: string;
-  source_modified_at: string;
   created_at: string;
   updated_at: string;
 };
@@ -51,7 +50,6 @@ type ProjectConfigRow = {
   id: string;
   key: string;
   name: string;
-  asana_project_value: string;
   github_owner: string;
   github_repository: string;
   default_ref: string;
@@ -62,8 +60,9 @@ type ProjectConfigRow = {
 function mapIssue(row: IssueRow): Issue {
   return {
     id: row.id,
-    asanaTaskGid: row.asana_task_gid,
-    asanaUrl: row.asana_url,
+    source: row.source,
+    externalRef: row.external_ref,
+    externalUrl: row.external_url,
     title: row.title,
     description: row.description,
     projectKey: row.project_key,
@@ -72,8 +71,6 @@ function mapIssue(row: IssueRow): Issue {
     reproductionSteps: row.reproduction_steps,
     expectedResult: row.expected_result,
     actualResult: row.actual_result,
-    asanaStatus: row.asana_status,
-    sourceModifiedAt: row.source_modified_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     attachments: [],
@@ -108,7 +105,6 @@ function mapProject(row: ProjectConfigRow): ProjectConfig {
     id: row.id,
     key: row.key,
     name: row.name,
-    asanaProjectValue: row.asana_project_value,
     githubOwner: row.github_owner,
     githubRepository: row.github_repository,
     defaultRef: row.default_ref,

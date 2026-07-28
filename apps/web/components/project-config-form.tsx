@@ -30,7 +30,6 @@ import {
 const REPO_NONE = "__none__";
 
 type RepoOption = { owner: string; repo: string };
-type AsanaProjectOption = { gid: string; name: string };
 
 type Props = {
   initialProjects: ProjectConfig[];
@@ -39,7 +38,6 @@ type Props = {
 const emptyForm: Omit<ProjectConfig, "id"> = {
   key: "",
   name: "",
-  asanaProjectValue: "",
   githubOwner: "",
   githubRepository: "",
   defaultRef: "main",
@@ -53,9 +51,6 @@ export function ProjectConfigForm({ initialProjects }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [repoOptions, setRepoOptions] = useState<RepoOption[]>([]);
-  const [asanaProjectOptions, setAsanaProjectOptions] = useState<
-    AsanaProjectOption[]
-  >([]);
 
   useEffect(() => {
     fetch("/api/github/available-repos")
@@ -64,13 +59,6 @@ export function ProjectConfigForm({ initialProjects }: Props) {
         setRepoOptions(data.repositories ?? []),
       )
       .catch(() => setRepoOptions([]));
-
-    fetch("/api/asana/available-projects")
-      .then((res) => res.json())
-      .then((data: { projects?: AsanaProjectOption[] }) =>
-        setAsanaProjectOptions(data.projects ?? []),
-      )
-      .catch(() => setAsanaProjectOptions([]));
   }, []);
 
   function handleRepoSelect(value: string) {
@@ -88,7 +76,6 @@ export function ProjectConfigForm({ initialProjects }: Props) {
     setForm({
       key: project.key,
       name: project.name,
-      asanaProjectValue: project.asanaProjectValue,
       githubOwner: project.githubOwner,
       githubRepository: project.githubRepository,
       defaultRef: project.defaultRef,
@@ -157,7 +144,6 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             <tr>
               <th className={tableHeadCellClass}>키</th>
               <th className={tableHeadCellClass}>표시 이름</th>
-              <th className={tableHeadCellClass}>Asana 프로젝트</th>
               <th className={tableHeadCellClass}>GitHub 저장소</th>
               <th className={tableHeadCellClass}>기본 브랜치</th>
               <th className={tableHeadCellClass}>활성화</th>
@@ -169,7 +155,6 @@ export function ProjectConfigForm({ initialProjects }: Props) {
               <tr key={p.id} className={tableRowClass}>
                 <td className={`${tableCellClass} font-mono text-xs`}>{p.key}</td>
                 <td className={tableCellClass}>{p.name}</td>
-                <td className={tableCellClass}>{p.asanaProjectValue}</td>
                 <td className={`${tableCellClass} font-mono text-xs`}>
                   {p.githubOwner}/{p.githubRepository}
                 </td>
@@ -217,8 +202,9 @@ export function ProjectConfigForm({ initialProjects }: Props) {
         </div>
 
         <p className="text-xs text-zinc-500">
-          여기 등록한다고 자동으로 이벤트가 오지 않습니다. Asana 프로젝트
-          GID로 웹훅을 별도로 등록해야 실제로 연결됩니다.
+          여기 등록해도 자동으로 이벤트가 오지 않습니다. 이 키를
+          `projectKey`로 지정해 <code>POST /api/issues</code>를 직접
+          호출해야 실제로 연결됩니다.
         </p>
 
         {(
@@ -243,53 +229,6 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             />
           </div>
         ))}
-
-        <div className="flex flex-col gap-2">
-          <label htmlFor="asanaProject" className={fieldLabelClass}>
-            Asana 프로젝트
-          </label>
-          {asanaProjectOptions.length > 0 ? (
-            <Select
-              value={form.asanaProjectValue || REPO_NONE}
-              onValueChange={(value) =>
-                setForm((prev) => ({
-                  ...prev,
-                  asanaProjectValue: value === REPO_NONE ? "" : value,
-                }))
-              }
-            >
-              <SelectTrigger id="asanaProject" className="h-9 w-full">
-                <SelectValue placeholder="선택하세요" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value={REPO_NONE}>선택하세요</SelectItem>
-                {asanaProjectOptions.map(({ gid, name }) => (
-                  <SelectItem key={gid} value={gid}>
-                    {name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <>
-              <p className={helpTextClass}>
-                프로젝트 목록을 못 불러와서 GID 직접 입력으로 대체합니다.
-              </p>
-              <input
-                id="asanaProject"
-                value={form.asanaProjectValue}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    asanaProjectValue: e.target.value,
-                  }))
-                }
-                placeholder="1216772744613005"
-                className={inputClass}
-              />
-            </>
-          )}
-        </div>
 
         <div className="flex flex-col gap-2">
           <label htmlFor="githubRepo" className={fieldLabelClass}>

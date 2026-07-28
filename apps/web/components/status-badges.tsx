@@ -27,19 +27,6 @@ const ANALYSIS_STATUS_CLASS: Record<AnalysisRun["status"], string> = {
     "border-transparent bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
 };
 
-const ASANA_STATUS_CLASS: Record<string, string> = {
-  "AI 분석 요청":
-    "border-transparent bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200",
-  "AI 분석 중":
-    "border-transparent bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-200",
-  "개발 검토":
-    "border-transparent bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
-  "추가 정보 필요":
-    "border-transparent bg-violet-100 text-violet-900 dark:bg-violet-950 dark:text-violet-200",
-  "분석 실패":
-    "border-transparent bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
-};
-
 export function ResultBadge({
   result,
 }: {
@@ -60,20 +47,6 @@ export function AnalysisStatusBadge({
   return (
     <Badge variant="secondary" className={cn(ANALYSIS_STATUS_CLASS[status])}>
       {ANALYSIS_STATUS_LABEL[status]}
-    </Badge>
-  );
-}
-
-export function AsanaStatusBadge({ status }: { status: string }) {
-  return (
-    <Badge
-      variant="secondary"
-      className={cn(
-        ASANA_STATUS_CLASS[status] ??
-          "border-transparent bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200",
-      )}
-    >
-      {status}
     </Badge>
   );
 }

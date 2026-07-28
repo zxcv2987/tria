@@ -5,7 +5,6 @@ export const runtime = "nodejs";
 type ProjectPayload = {
   key: string;
   name: string;
-  asanaProjectValue: string;
   githubOwner: string;
   githubRepository: string;
   defaultRef: string;
@@ -18,7 +17,6 @@ function isProjectPayload(value: unknown): value is ProjectPayload {
   return (
     typeof v.key === "string" &&
     typeof v.name === "string" &&
-    typeof v.asanaProjectValue === "string" &&
     typeof v.githubOwner === "string" &&
     typeof v.githubRepository === "string" &&
     typeof v.defaultRef === "string" &&
@@ -49,7 +47,6 @@ export async function PUT(
       .update({
         key: body.key,
         name: body.name,
-        asana_project_value: body.asanaProjectValue,
         github_owner: body.githubOwner,
         github_repository: body.githubRepository,
         default_ref: body.defaultRef,

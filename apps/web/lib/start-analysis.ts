@@ -11,7 +11,6 @@ type IssueRow = {
   title: string;
   description: string;
   project_key: string;
-  source_modified_at: string;
 };
 
 type ProjectConfigRow = {
@@ -22,22 +21,35 @@ type ProjectConfigRow = {
   is_active: boolean;
 };
 
+/** 같은 이슈에 대해 QUEUED/RUNNING 상태인 실행이 이미 있는지 (문서 5.2, 18장). */
+export async function hasInFlightRun(
+  db: SupabaseClient,
+  issueId: string
+): Promise<boolean> {
+  const { data } = await db
+    .from("analysis_runs")
+    .select("id")
+    .eq("issue_id", issueId)
+    .in("status", ["QUEUED", "RUNNING"])
+    .limit(1);
+  return !!data && data.length > 0;
+}
+
 /**
  * project_configs에서 allowlist된 repository/ref만 사용 (문서 14장).
  *
- * force: 수동 재분석용. UNIQUE(issue_id, source_modified_at)은 같은 이슈
- * 버전에 대한 자동(웹훅) 중복 실행을 막기 위한 제약이라, 사람이 명시적으로
- * 재분석을 요청할 때는 이슈의 source_modified_at을 그대로 쓰지 않고 현재
- * 시각으로 대체해 제약에 걸리지 않게 한다.
+ * notifyUrl: 접수 API(문서 5.1절)로 시작된 실행에만 채워진다 — 완료/실패 시
+ * 이 주소로 결과를 통보한다 (analysis/callback route 참고). UI 재분석
+ * 버튼으로 시작된 실행은 notifyUrl 없이 Tria 웹에서만 결과를 확인한다.
  */
 export async function startAnalysis(
   db: SupabaseClient,
   issueId: string,
-  options: { force?: boolean } = {}
+  options: { notifyUrl?: string } = {}
 ): Promise<StartAnalysisResult> {
   const { data: issue, error: issueError } = await db
     .from("issues")
-    .select("id, title, description, project_key, source_modified_at")
+    .select("id, title, description, project_key")
     .eq("id", issueId)
     .maybeSingle();
 
@@ -68,12 +80,10 @@ export async function startAnalysis(
     .from("analysis_runs")
     .insert({
       issue_id: row.id,
-      source_modified_at: options.force
-        ? new Date().toISOString()
-        : row.source_modified_at,
       status: "QUEUED",
       target_repository: project.github_repository,
       target_ref: project.default_ref,
+      notify_url: options.notifyUrl ?? null,
       evidence: [],
       external_checks: [],
       missing_information: [],
@@ -115,45 +125,4 @@ export async function startAnalysis(
   }
 
   return { analysisRunId, status: "QUEUED" };
-}
-
-/** 문서 5.2 분석 시작 조건. */
-export async function canStartAnalysis(
-  db: SupabaseClient,
-  issue: {
-    id: string;
-    asana_status: string;
-    project_key: string | null;
-    source_modified_at: string;
-  }
-): Promise<boolean> {
-  if (issue.asana_status !== "AI 분석 요청") return false;
-  if (!issue.project_key) return false;
-
-  const { data: config } = await db
-    .from("project_configs")
-    .select("id")
-    .eq("key", issue.project_key)
-    .eq("is_active", true)
-    .maybeSingle();
-  if (!config) return false;
-
-  const { data: inFlight } = await db
-    .from("analysis_runs")
-    .select("id")
-    .eq("issue_id", issue.id)
-    .in("status", ["QUEUED", "RUNNING"])
-    .limit(1);
-  if (inFlight && inFlight.length > 0) return false;
-
-  const { data: done } = await db
-    .from("analysis_runs")
-    .select("id")
-    .eq("issue_id", issue.id)
-    .eq("status", "SUCCEEDED")
-    .gte("created_at", issue.source_modified_at)
-    .limit(1);
-  if (done && done.length > 0) return false;
-
-  return true;
 }

@@ -1,59 +1,31 @@
 import type { CallbackPayload } from "@tria/analysis";
 import { isCallbackPayload } from "@tria/analysis";
 import { tryCreateServiceClient } from "@/lib/supabase";
-import { addAsanaComment, updateAsanaTaskStatus } from "@/lib/asana";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const RESULT_TYPE_LABEL: Record<string, string> = {
-  CODE_LIKELY: "코드 원인 유력",
-  CHECK_EXTERNAL: "외부 점검 권장",
-  NEED_MORE_INFO: "추가 정보 필요",
-};
-
 /**
- * 분석 완료/실패를 Asana에도 반영한다 (문서 5.3 상태 흐름, 16장 결과 표시).
- * best-effort — Asana 쪽이 실패해도 우리 DB 갱신 자체는 이미 끝난 뒤라 응답을 막지 않는다.
+ * 접수 시 받은 notifyUrl로 결과를 통보한다 (문서 5.1, 16장).
+ * Tria core는 이 주소가 어떤 시스템인지 모른다 — best-effort POST일 뿐,
+ * 실패해도 우리 DB 갱신 자체는 이미 끝난 뒤라 응답을 막지 않는다.
  */
-async function syncAsana(
+async function notifyExternal(
   db: SupabaseClient,
-  issueId: string,
+  analysisRunId: string,
   payload: CallbackPayload
 ): Promise<void> {
-  const { data: issue } = await db
-    .from("issues")
-    .select("asana_task_gid")
-    .eq("id", issueId)
+  const { data: run } = await db
+    .from("analysis_runs")
+    .select("notify_url")
+    .eq("id", analysisRunId)
     .maybeSingle();
-  const taskGid = (issue as { asana_task_gid?: string } | null)
-    ?.asana_task_gid;
-  if (!taskGid) return;
+  const notifyUrl = (run as { notify_url?: string } | null)?.notify_url;
+  if (!notifyUrl) return;
 
-  const baseUrl = process.env.TRIA_PUBLIC_BASE_URL?.replace(/\/$/, "");
-  const detailLink = baseUrl ? `${baseUrl}/issues/${issueId}` : null;
-
-  if (payload.status === "SUCCEEDED") {
-    const statusLabel =
-      payload.result.result === "NEED_MORE_INFO" ? "추가 정보 필요" : "개발 검토";
-    await updateAsanaTaskStatus(taskGid, statusLabel);
-    await addAsanaComment(
-      taskGid,
-      [
-        "🤖 Tria 분석 완료",
-        "",
-        `판정: ${RESULT_TYPE_LABEL[payload.result.result] ?? payload.result.result}`,
-        "",
-        "요약:",
-        payload.result.summary,
-        ...(detailLink ? ["", "상세 분석:", detailLink] : []),
-      ].join("\n")
-    );
-  } else {
-    await updateAsanaTaskStatus(taskGid, "분석 실패");
-    await addAsanaComment(
-      taskGid,
-      ["🤖 Tria 분석 실패", "", `사유: ${payload.failureReason}`].join("\n")
-    );
-  }
+  await fetch(notifyUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 }
 
 export const runtime = "nodejs";
@@ -118,7 +90,7 @@ export async function POST(request: Request) {
 
   const { data: existing, error: fetchError } = await db
     .from("analysis_runs")
-    .select("id, status, issue_id")
+    .select("id, status")
     .eq("id", payload.analysisRunId)
     .maybeSingle();
 
@@ -136,10 +108,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const { status: current, issue_id: issueId } = existing as {
+  const { status: current } = existing as {
     id: string;
     status: string;
-    issue_id: string;
   };
   // idempotency: 이미 완료된 실행의 중복 callback은 무시
   if (current === "SUCCEEDED" || current === "FAILED") {
@@ -197,10 +168,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    await syncAsana(db, issueId, payload);
+    await notifyExternal(db, payload.analysisRunId, payload);
   } catch (err) {
     console.error(
-      "Asana 상태/댓글 동기화 실패 (무시하고 계속 진행):",
+      "notifyUrl 통보 실패 (무시하고 계속 진행):",
       err instanceof Error ? err.message : err
     );
   }

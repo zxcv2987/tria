@@ -6,8 +6,9 @@ import type {
 // 문서 12장 형태 — UI mock 전용
 export type Issue = {
   id: string;
-  asanaTaskGid: string;
-  asanaUrl: string;
+  source: string;
+  externalRef: string | null;
+  externalUrl: string | null;
   title: string;
   description: string;
   projectKey: string;
@@ -16,8 +17,6 @@ export type Issue = {
   reproductionSteps: string | null;
   expectedResult: string | null;
   actualResult: string | null;
-  asanaStatus: string;
-  sourceModifiedAt: string;
   createdAt: string;
   updatedAt: string;
   attachments: string[];
@@ -48,7 +47,6 @@ export type ProjectConfig = {
   id: string;
   key: string;
   name: string;
-  asanaProjectValue: string;
   githubOwner: string;
   githubRepository: string;
   defaultRef: string;
@@ -62,7 +60,6 @@ export const MOCK_PROJECTS: ProjectConfig[] = [
     id: "proj-1",
     key: "classroom",
     name: "Classroom",
-    asanaProjectValue: "1200000000000001",
     githubOwner: "tria-org",
     githubRepository: "classroom-web",
     defaultRef: "main",
@@ -73,7 +70,6 @@ export const MOCK_PROJECTS: ProjectConfig[] = [
     id: "proj-2",
     key: "billing",
     name: "Billing",
-    asanaProjectValue: "1200000000000002",
     githubOwner: "tria-org",
     githubRepository: "billing-api",
     defaultRef: "main",
@@ -84,7 +80,6 @@ export const MOCK_PROJECTS: ProjectConfig[] = [
     id: "proj-3",
     key: "admin",
     name: "Admin Console",
-    asanaProjectValue: "1200000000000003",
     githubOwner: "tria-org",
     githubRepository: "admin-console",
     defaultRef: "develop",
@@ -96,8 +91,9 @@ export const MOCK_PROJECTS: ProjectConfig[] = [
 export const MOCK_ISSUES: Issue[] = [
   {
     id: "issue-1",
-    asanaTaskGid: "1201001",
-    asanaUrl: "https://app.asana.com/0/1200/1201001",
+    source: "asana",
+    externalRef: "1201001",
+    externalUrl: "https://app.asana.com/0/1200/1201001",
     title: "강의 수정 후 목록이 갱신되지 않음",
     description:
       "강의 제목을 수정하고 저장하면 목록 화면에서 이전 제목이 그대로 보입니다. 새로고침 후에는 반영됩니다.",
@@ -108,16 +104,15 @@ export const MOCK_ISSUES: Issue[] = [
       "1. 강의 상세에서 제목 수정\n2. 저장\n3. 목록으로 이동",
     expectedResult: "목록에 수정된 제목이 바로 반영된다.",
     actualResult: "이전 제목이 유지되고, 새로고침 후에야 반영된다.",
-    asanaStatus: "개발 검토",
-    sourceModifiedAt: "2026-07-20T09:12:00+09:00",
     createdAt: "2026-07-20T08:50:00+09:00",
     updatedAt: "2026-07-20T10:05:00+09:00",
     attachments: ["screenshot-list.png"],
   },
   {
     id: "issue-2",
-    asanaTaskGid: "1201002",
-    asanaUrl: "https://app.asana.com/0/1200/1201002",
+    source: "asana",
+    externalRef: "1201002",
+    externalUrl: "https://app.asana.com/0/1200/1201002",
     title: "결제 완료 후에도 미결제 배지 표시",
     description:
       "카드 결제가 성공했는데 마이페이지에 미결제 배지가 남아 있습니다.",
@@ -128,16 +123,15 @@ export const MOCK_ISSUES: Issue[] = [
       "1. 미결제 상태에서 결제 진행\n2. 성공 확인\n3. 마이페이지 진입",
     expectedResult: "미결제 배지가 사라진다.",
     actualResult: "배지가 계속 표시된다.",
-    asanaStatus: "AI 분석 중",
-    sourceModifiedAt: "2026-07-21T14:00:00+09:00",
     createdAt: "2026-07-21T13:40:00+09:00",
     updatedAt: "2026-07-21T14:10:00+09:00",
     attachments: [],
   },
   {
     id: "issue-3",
-    asanaTaskGid: "1201003",
-    asanaUrl: "https://app.asana.com/0/1200/1201003",
+    source: "manual",
+    externalRef: null,
+    externalUrl: null,
     title: "관리자 메뉴가 일부 계정에서 비어 있음",
     description: "특정 관리자 계정으로 로그인하면 사이드 메뉴가 비어 있습니다.",
     projectKey: "admin",
@@ -146,8 +140,6 @@ export const MOCK_ISSUES: Issue[] = [
     reproductionSteps: null,
     expectedResult: null,
     actualResult: "메뉴가 렌더링되지 않는다.",
-    asanaStatus: "추가 정보 필요",
-    sourceModifiedAt: "2026-07-22T09:00:00+09:00",
     createdAt: "2026-07-22T08:30:00+09:00",
     updatedAt: "2026-07-22T09:20:00+09:00",
     attachments: [],

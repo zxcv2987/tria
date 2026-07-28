@@ -168,14 +168,16 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
         <button type="button" onClick={handleReanalyze} className={btnPrimaryClass}>
           재분석
         </button>
-        <a
-          href={issue.asanaUrl}
-          target="_blank"
-          rel="noreferrer"
-          className={btnSecondaryClass}
-        >
-          Asana에서 열기
-        </a>
+        {issue.externalUrl && (
+          <a
+            href={issue.externalUrl}
+            target="_blank"
+            rel="noreferrer"
+            className={btnSecondaryClass}
+          >
+            원본에서 보기
+          </a>
+        )}
         <button type="button" onClick={handleCopy} className={btnSecondaryClass}>
           결과 복사
         </button>
@@ -214,15 +216,19 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
           }
         />
         <div className="flex flex-col gap-1.5">
-          <h3 className={metaLabelClass}>Asana 링크</h3>
-          <a
-            href={issue.asanaUrl}
-            target="_blank"
-            rel="noreferrer"
-            className={`break-all ${linkClass}`}
-          >
-            {issue.asanaUrl}
-          </a>
+          <h3 className={metaLabelClass}>원본</h3>
+          {issue.externalUrl ? (
+            <a
+              href={issue.externalUrl}
+              target="_blank"
+              rel="noreferrer"
+              className={`break-all ${linkClass}`}
+            >
+              {issue.externalUrl}
+            </a>
+          ) : (
+            <p className={helpTextClass}>{issue.source}</p>
+          )}
         </div>
       </section>
 
