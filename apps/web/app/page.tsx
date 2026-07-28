@@ -55,7 +55,7 @@ export default function Home() {
         이 화면은 로컬 전용입니다. codex CLI가 로그인돼 있고
         TARGET_REPOSITORY_PATH가 설정된 로컬 개발 서버(pnpm dev)에서만
         동작하며, 배포 환경에서는 사용할 수 없습니다. 운영 환경에서는
-        Asana 웹훅을 통한 분석 흐름을 이용하세요.
+        이슈 접수 API(POST /api/issues)를 통한 분석 흐름을 이용하세요.
       </p>
 
       <IssueForm onSubmit={handleAnalyze} disabled={status === "loading"} />

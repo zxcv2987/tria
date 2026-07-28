@@ -2,8 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, SESSION_VALUE } from "@/lib/auth";
 
 // ponytail: 정식 SSO(문서 17장, TODO(auth)) 붙기 전까지의 임시 방어선.
-// /issues, /settings와 그 안에서 쓰는 쓰기 API만 막는다 — Asana 웹훅,
-// Runner callback/status는 각자 별도 secret으로 인증하므로 여기서 막지 않는다.
+// /issues, /settings와 그 안에서 쓰는 쓰기 API만 막는다 — 이슈 접수 API
+// (/api/issues), Runner callback/status는 각자 별도 secret으로 인증하므로
+// 여기서 막지 않는다.
 const PROTECTED_PAGE_PATHS = ["/issues", "/settings"];
 
 function isProtectedPage(pathname: string): boolean {

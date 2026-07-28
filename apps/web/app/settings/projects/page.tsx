@@ -20,7 +20,7 @@ export default async function ProjectSettingsPage() {
           </>
         }
         title="프로젝트 설정"
-        description="Asana 프로젝트와 GitHub 저장소 매핑을 관리합니다."
+        description="프로젝트 키와 GitHub 저장소 매핑을 관리합니다."
       />
 
       <ProjectConfigForm initialProjects={projects} />
