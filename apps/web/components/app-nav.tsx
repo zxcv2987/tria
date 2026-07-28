@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
-  { href: "/", label: "단일 분석", match: (path: string) => path === "/" },
   {
     href: "/issues",
     label: "이슈 목록",
@@ -24,7 +23,7 @@ export function AppNav() {
     <header className="sticky top-0 z-20 border-b border-zinc-200/80 bg-white/90 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/90">
       <nav className="mx-auto flex h-12 max-w-6xl items-center gap-1 px-6 sm:px-8">
         <Link
-          href="/"
+          href="/issues"
           className="mr-3 text-[0.9375rem] font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
         >
           Tria
