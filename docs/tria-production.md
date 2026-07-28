@@ -5,19 +5,21 @@
 * 제품명: Tria
 * 대상 버전: 운영형 v1.0
 * 제품 유형: AI 기반 이슈 트리아지 및 코드 조사 자동화 플랫폼
-* 주요 연동: Asana, GitHub, GitHub Actions
+* 주요 연동: GitHub, GitHub Actions (이슈 소스는 특정 도구에 고정하지 않음 — Tria가 정의한 접수 API로 연동)
 * 웹 애플리케이션: Next.js
 * 데이터베이스: PostgreSQL 또는 Supabase
 * 분석 실행 환경: GitHub Actions 또는 전용 Worker
 * 저장소 인증: GitHub App
-* 코드 분석: Codex CLI
+* 코드 분석: Codex CLI 또는 Gemini API (환경변수 `ANALYSIS_PROVIDER`로 선택, 동급 provider)
 * 주요 사용자: 행정·운영 담당자, 개발자, 개발 관리자
 
 ---
 
 # 2. 제품 정의
 
-> Tria는 Asana에 등록된 서비스 이슈를 자동으로 수집하고 관련 GitHub 저장소를 코딩 에이전트로 분석하여, 개발자에게 코드 원인 후보와 추가 점검 항목을 제공하는 AI 이슈 트리아지 플랫폼이다.
+> Tria는 어떤 도구에서 들어오든 이슈를 접수해 관련 GitHub 저장소를 코딩 에이전트로 분석하고, 개발자에게 코드 원인 후보와 추가 점검 항목을 제공하는 AI 이슈 트리아지 플랫폼이다.
+
+이슈는 Tria가 정의한 접수 API(5장)를 통해 들어온다. Asana는 그 접수 API를 호출하는 여러 소스 중 하나일 뿐이며, 지금 당장 연동돼 있지 않아도 된다 — 언제든 얇은 어댑터로 다시 붙일 수 있다(5.4절).
 
 Tria는 이슈를 자동으로 해결하는 제품이 아니다.
 
@@ -38,7 +40,7 @@ Tria는 이슈를 자동으로 해결하는 제품이 아니다.
 
 ## 3.1 핵심 목표
 
-개발자가 Asana 이슈를 처음 확인했을 때 다음 정보가 이미 준비돼 있는 상태를 만든다.
+개발자가 이슈를 처음 확인했을 때 다음 정보가 이미 준비돼 있는 상태를 만든다.
 
 * 관련 프로젝트와 저장소
 * 의심되는 코드 영역
@@ -50,7 +52,7 @@ Tria는 이슈를 자동으로 해결하는 제품이 아니다.
 
 ## 3.2 운영 목표
 
-* 행정 담당자의 기존 Asana 업무 흐름을 유지한다.
+* 이슈 소스 도구(Asana, 사내 폼, 다른 이슈 트래커 등)를 특정하지 않고, 정해진 접수 API만 호출하면 연동되게 한다.
 * 개발자에게는 별도의 상세 분석 웹을 제공한다.
 * 분석 작업을 비동기로 실행한다.
 * 내부 비공개 저장소를 안전하게 읽는다.
@@ -64,12 +66,7 @@ Tria는 이슈를 자동으로 해결하는 제품이 아니다.
 
 ## 4.1 행정·운영 담당자
 
-주요 행동:
-
-* Asana에 이슈를 작성한다.
-* 작성 완료 후 상태를 `AI 분석 요청`으로 변경한다.
-* Asana에서 분석 상태와 요약을 확인한다.
-* 추가 정보 요청이 있으면 내용을 보완한다.
+행정 담당자는 평소 쓰던 이슈 도구(Asana 등)에 그대로 이슈를 작성한다. 그 도구가 Tria 접수 API를 호출하도록 연동돼 있으면(5장) 별도 행동 없이 분석이 시작된다. 연동에 결과 통보(`notifyUrl`, 5.1절)까지 포함돼 있으면 원래 쓰던 도구에서 분석 상태와 요약도 확인할 수 있다.
 
 행정 담당자는 Tria의 코드 상세 화면을 필수로 사용하지 않는다.
 
@@ -95,86 +92,99 @@ Tria는 이슈를 자동으로 해결하는 제품이 아니다.
 
 ---
 
-# 5. Asana 워크플로
+# 5. 이슈 접수 프로토콜
 
-## 5.1 이슈 상태
+Tria는 특정 이슈 도구의 웹훅을 직접 받지 않는다. 대신 Tria가 정의한 접수 API 하나만 두고, 모든 소스(Asana, 사내 폼, 다른 이슈 트래커, 사람이 직접 호출하는 스크립트 등)는 이 API를 호출하는 방식으로 연동한다. "이슈가 어떻게 들어왔는가"와 "분석을 어떻게 시작하는가"를 분리해, Tria 쪽이 특정 벤더의 상태값이나 웹훅 payload 형식을 알 필요가 없게 한다.
 
-Asana 사용자 정의 필드:
+## 5.1 접수 API
 
 ```text
-이슈 상태
+POST /api/issues
+Authorization: Bearer <TRIA_INGEST_API_KEY>
 ```
 
-상태 목록:
+요청 본문:
 
-| 상태       | 의미                    |
-| -------- | --------------------- |
-| 작성 중     | 행정 담당자가 이슈를 작성하고 있음   |
-| AI 분석 요청 | 작성 완료 및 분석 요청         |
-| AI 분석 중  | Tria가 분석 작업을 실행하고 있음  |
-| 추가 정보 필요 | 분석에 필요한 정보가 부족함       |
-| 개발 검토    | 분석 완료, 개발자 검토 필요      |
-| 처리 중     | 개발자가 수정 또는 추가 조사를 진행함 |
-| 분석 실패    | 시스템 오류로 분석 실패         |
-| 해결 완료    | 이슈 수정 및 검증 완료         |
+```ts
+type IssueIntake = {
+  title: string;
+  description?: string;
+  projectKey: string;          // project_configs.key
+
+  environment?: string;
+  occurredUrl?: string;
+  reproductionSteps?: string;
+  expectedResult?: string;
+  actualResult?: string;
+
+  source?: string;             // 표시용 라벨. 예: "asana", "manual". 기본값 "api"
+  externalRef?: string;        // 소스 쪽 식별자. 있으면 재호출 시 같은 이슈로 upsert됨
+  externalUrl?: string;        // "원본에서 보기" 링크
+
+  notifyUrl?: string;          // 분석 완료/실패 시 이 주소로 결과를 POST (선택)
+};
+```
+
+이 호출 자체가 "분석해달라"는 요청이다. 외부 도구의 상태 필드가 무엇으로 바뀌었는지를 Tria가 감시하는 방식은 쓰지 않는다 — 호출한 쪽이 언제 분석을 요청할지 책임진다.
 
 ## 5.2 분석 시작 조건
 
 다음 조건을 모두 만족할 때 분석을 시작한다.
 
-* 현재 상태가 `AI 분석 요청`
-* 대상 프로젝트가 설정됨
-* 동일한 이슈 수정 버전에 대한 완료된 분석이 없음
-* 현재 실행 중인 분석이 없음
-* 지원되는 프로젝트에 해당함
+* `projectKey`가 가리키는 활성 프로젝트 설정이 존재함
+* 같은 이슈에 대해 현재 실행 중(QUEUED/RUNNING)인 분석이 없음 — 있으면 새로 만들지 않고 그 실행 정보를 그대로 반환
+
+과거처럼 "이슈 수정 버전"을 비교해 중복 여부를 판단하지 않는다. 소스마다 수정 시각 개념이 있을 수도 없을 수도 있어서, 그 판단은 호출하는 쪽(어댑터)의 책임으로 남긴다.
 
 ## 5.3 상태 흐름
 
-정상:
+이슈 상태는 더 이상 외부 도구의 커스텀 필드가 아니라, Tria가 실제로 아는 값인 분석 실행(`analysis_runs`) 상태로 표현한다.
 
 ```text
-작성 중
-→ AI 분석 요청
-→ AI 분석 중
-→ 개발 검토
-→ 처리 중
-→ 해결 완료
+QUEUED → RUNNING → SUCCEEDED (CODE_LIKELY / CHECK_EXTERNAL / NEED_MORE_INFO)
+                  → FAILED
 ```
 
-정보 부족:
+정보가 부족해 보이거나(`NEED_MORE_INFO`) 실패한 경우, 재분석은 같은 이슈에 다시 `POST /api/issues`를 호출하거나 Tria 웹의 재분석 버튼으로 요청한다.
 
-```text
-AI 분석 요청
-→ AI 분석 중
-→ 추가 정보 필요
-→ AI 분석 요청
-```
+## 5.4 Asana를 다시 붙이려면
 
-실패:
+Asana는 core 도메인에서 완전히 분리돼 있다. 다시 연동하고 싶으면 Tria 자체를 고치는 게 아니라, 접수 API를 호출하는 얇은 어댑터를 하나 추가하면 된다. 이 어댑터는 Tria 저장소 안의 별도 route로 두거나(예: `apps/web/app/api/adapters/asana/webhook`), 완전히 별도 서비스로 둬도 무방하다 — Tria 쪽 계약(5.1절)만 지키면 된다.
 
-```text
-AI 분석 요청
-→ AI 분석 중
-→ 분석 실패
-→ AI 분석 요청
-```
+어댑터가 해야 할 일:
+
+1. **수신**: Asana 웹훅(핸드셰이크 + `X-Hook-Signature` 검증)을 받는다. 예전 `apps/web/app/api/webhooks/asana/route.ts`에 있던 서명 검증 로직을 그대로 재사용할 수 있다.
+2. **조회**: 이벤트로 받은 task gid로 Asana API를 호출해 제목, 본문, 프로젝트 GID, permalink를 가져온다 (예전 `lib/asana.ts`의 `fetchAsanaTaskDetails`).
+3. **매핑**: Asana 프로젝트 GID → Tria `projectKey` 매핑은 이제 Tria의 `project_configs`가 아니라 **어댑터 자신이** 들고 있는다 (환경변수나 어댑터 전용 작은 설정 파일). Tria core는 어떤 프로젝트가 어떤 Asana GID에 대응하는지 몰라도 된다.
+4. **접수 호출**: 매핑된 정보로 Tria의 `POST /api/issues`를 호출한다.
+   ```json
+   {
+     "title": "<task.name>",
+     "description": "<task.notes>",
+     "projectKey": "<매핑된 key>",
+     "source": "asana",
+     "externalRef": "<task.gid>",
+     "externalUrl": "<task.permalink_url>",
+     "notifyUrl": "https://<어댑터 주소>/api/adapters/asana/notify"
+   }
+   ```
+5. **통보 수신**: Tria가 분석을 끝내면 위 `notifyUrl`로 `CallbackPayload`(11장과 동일한 형태)를 POST한다. 어댑터는 이를 받아 Asana 댓글 작성과 상태 변경을 수행한다 (예전 `analysis/callback/route.ts`의 `syncAsana` 로직을 어댑터 쪽으로 옮기면 된다).
+
+이렇게 하면 "Asana의 상태값이 뭔지", "Asana 웹훅 payload가 어떻게 생겼는지"를 아는 코드는 전부 어댑터 안에만 있고, Tria core는 소스가 Asana인지 다른 무엇인지 몰라도 동작한다. 나중에 Jira나 사내 폼을 붙이고 싶을 때도 같은 패턴(수신 → 조회 → 매핑 → 접수 호출 → 통보 수신)을 각자의 어댑터로 반복하면 된다.
 
 ---
 
 # 6. 전체 시스템 흐름
 
 ```text
-행정 담당자가 Asana 이슈 작성
+호출자(어댑터 또는 직접 API 호출)가 이슈 내용을 준비
     ↓
-이슈 상태를 AI 분석 요청으로 변경
-    ↓
-Asana Webhook
+POST /api/issues (5.1절 접수 API)
     ↓
 Tria Next.js 서버
-- 웹훅 검증
-- 최신 이슈 조회
-- 이슈 동기화
-- 분석 실행 생성
+- API 키 검증
+- 이슈 upsert
+- in-flight 확인 후 분석 실행 생성
     ↓
 GitHub repository_dispatch
     ↓
@@ -182,7 +192,7 @@ Tria Runner GitHub Actions
     ↓
 대상 저장소 인증 및 checkout
     ↓
-Codex CLI 코드 분석
+Codex CLI 또는 Gemini API 코드 분석
     ↓
 구조화된 분석 결과 생성
     ↓
@@ -192,8 +202,10 @@ Tria Callback API
     ↓
 Tria 상세 화면 갱신
     ↓
-Asana 요약 댓글과 상태 갱신
+(notifyUrl이 있으면) 호출자에게 결과 통보
 ```
+
+Asana를 소스로 쓰는 경우, "호출자"는 5.4절의 어댑터가 된다.
 
 ---
 
@@ -262,15 +274,14 @@ apps/web
 
 담당 역할:
 
-* Asana 웹훅 수신
-* 최신 Asana 이슈 동기화
+* 이슈 접수 API 수신 (5장)
 * 분석 실행 생성
 * GitHub Actions 실행 요청
 * 분석 결과 Callback 수신
 * 분석 결과 검증 및 저장
 * 이슈 목록과 상세 화면
 * 재분석 기능
-* Asana 댓글 및 상태 변경
+* notifyUrl로 결과 통보
 * 프로젝트 설정 관리
 
 Tria Web은 저장소 checkout이나 Codex 실행을 직접 수행하지 않는다.
@@ -323,12 +334,14 @@ Tria Runner는 별도 GitHub 저장소 또는 별도 상시 서버가 아니다.
 
 Tria 저장소에 포함된 실행 코드이며, 같은 저장소의 GitHub Actions가 시작될 때만 실행한다.
 
+분석 엔진은 `packages/runner/src/providers`에 provider 인터페이스로 분리돼 있으며, `ANALYSIS_PROVIDER` 환경변수로 Codex CLI 또는 Gemini API 중 선택한다. 둘 중 하나를 기본값으로 못박지 않고 동급 provider로 취급한다.
+
 담당 역할:
 
 * GitHub Actions payload 검증
 * 이슈 분석 프롬프트 생성
-* 대상 저장소 checkout 이후 Codex 실행 준비
-* Codex 결과 JSON 파싱
+* 대상 저장소 checkout 이후 AI provider 실행 준비
+* AI 분석 결과 JSON 파싱
 * 실제 파일 경로 검증
 * 분석 결과 판정 보정
 * Tria Callback API 호출
@@ -399,7 +412,7 @@ const repositoryMap = {
 } as const;
 ```
 
-Asana 사용자 입력이나 GitHub Actions payload에서 임의 저장소 주소를 직접 지정할 수 없게 한다.
+이슈 접수 요청이나 GitHub Actions payload에서 임의 저장소 주소를 직접 지정할 수 없게 한다.
 
 대상 저장소는 GitHub App 설치 토큰을 사용해 `target/` 디렉터리에 checkout한다.
 
@@ -407,7 +420,7 @@ Asana 사용자 입력이나 GitHub Actions payload에서 임의 저장소 주�
 
 저장 대상:
 
-* Asana 이슈
+* 접수된 이슈
 * 분석 실행
 * 분석 결과
 * 프로젝트 설정
@@ -496,12 +509,12 @@ GitHub App Private Key
 
 * 이슈 제목
 * 프로젝트
-* Asana 상태
+* 원본 소스 라벨 (예: asana, manual, api)
 * 분석 상태
 * AI 판정
 * 등록 시각
 * 최근 분석 시각
-* Asana 링크
+* 원본 링크 (있는 경우)
 
 필터:
 
@@ -536,7 +549,7 @@ GitHub App Private Key
 * 발생 URL
 * 환경
 * 첨부파일
-* Asana 링크
+* 원본 링크 (있는 경우)
 
 분석 결과:
 
@@ -555,7 +568,7 @@ GitHub App Private Key
 사용자 액션:
 
 * 재분석
-* Asana에서 열기
+* 원본에서 열기 (원본 링크가 있는 경우)
 * 결과 복사
 * 분석 피드백
 * 실행 로그 확인
@@ -570,9 +583,8 @@ GitHub App Private Key
 
 설정 항목:
 
-* 프로젝트 키
+* 프로젝트 키 (접수 API의 `projectKey`와 매칭)
 * 표시 이름
-* Asana 프로젝트 값
 * GitHub 저장소
 * 기본 브랜치
 * 활성화 여부
@@ -658,8 +670,10 @@ type AnalysisResult = {
 ```ts
 type Issue = {
   id: string;
-  asanaTaskGid: string;
-  asanaUrl: string;
+
+  source: string;              // 표시용 라벨. 예: "asana", "manual", "api"
+  externalRef: string | null;  // 소스 쪽 식별자 (있으면 upsert 키)
+  externalUrl: string | null;  // "원본에서 보기" 링크
 
   title: string;
   description: string;
@@ -671,13 +685,12 @@ type Issue = {
   expectedResult: string | null;
   actualResult: string | null;
 
-  asanaStatus: string;
-  sourceModifiedAt: Date;
-
   createdAt: Date;
   updatedAt: Date;
 };
 ```
+
+이슈 자체에는 더 이상 외부 상태 텍스트(`asanaStatus`)를 두지 않는다. 목록/상세 화면의 상태 표시는 해당 이슈의 최신 `AnalysisRun.status`/`resultType`에서 파생한다 (12.2절).
 
 ## 12.2 AnalysisRun
 
@@ -713,6 +726,8 @@ type AnalysisRun = {
   workflowRunUrl: string | null;
   failureReason: string | null;
 
+  notifyUrl: string | null;    // 완료/실패 시 결과를 통보할 주소 (접수 API에서 받은 값)
+
   startedAt: Date | null;
   finishedAt: Date | null;
   createdAt: Date;
@@ -727,7 +742,6 @@ type ProjectConfig = {
   key: string;
   name: string;
 
-  asanaProjectValue: string;
   githubOwner: string;
   githubRepository: string;
   defaultRef: string;
@@ -735,6 +749,8 @@ type ProjectConfig = {
   isActive: boolean;
 };
 ```
+
+외부 이슈 트래커의 프로젝트 식별자(예: Asana 프로젝트 GID)는 여기서 관리하지 않는다. 그 매핑은 각 소스의 어댑터가 자기 쪽에서 들고 있는다 (5.4절).
 
 ## 12.4 AnalysisFeedback
 
@@ -758,20 +774,17 @@ type AnalysisFeedback = {
 
 # 13. API 설계
 
-## Asana 웹훅
+## 이슈 접수
 
 ```text
-POST /api/webhooks/asana
+POST /api/issues
 ```
 
-담당 역할:
+담당 역할 (5.1절):
 
-* 웹훅 핸드셰이크
-* 요청 서명 검증
-* 변경된 태스크 식별
-* 최신 태스크 조회
-* 분석 시작 조건 검증
-* 분석 실행 생성
+* API 키 검증
+* 이슈 upsert (`externalRef` 있으면 갱신, 없으면 신규)
+* in-flight 확인 후 분석 실행 생성
 
 ## 수동 분석 및 재분석
 
@@ -804,7 +817,7 @@ repository_dispatch
 → GitHub App 설치 토큰 생성
 → 대상 저장소를 target/에 checkout
 → packages/runner에서 분석 프롬프트 생성
-→ Codex 실행
+→ Codex 또는 Gemini 실행
 → analysis.json 생성
 → packages/analysis 스키마로 결과 검증
 → 실제 파일 경로 검증
@@ -863,11 +876,11 @@ if (
 
 ---
 
-# 16. Asana 결과 표시
+# 16. 결과 통보 (notifyUrl)
 
-Asana에는 비개발자도 이해할 수 있는 요약만 남긴다.
+접수 시(5.1절) `notifyUrl`을 받은 분석 실행은 완료/실패 시 그 주소로 `CallbackPayload`(11장과 동일 형태)를 best-effort POST한다. Tria core는 그 주소가 어떤 시스템인지 모른다 — 비개발자도 이해할 수 있는 요약으로 가공해 원본 도구(예: Asana 댓글)에 남기는 일은 호출자(어댑터) 쪽 책임이다.
 
-예시:
+Asana 어댑터(5.4절)라면 이런 형태로 가공해 댓글을 남기게 된다:
 
 ```text
 🤖 Tria 1차 분석 완료
@@ -882,13 +895,17 @@ Asana에는 비개발자도 이해할 수 있는 요약만 남긴다.
 https://tria.company.com/issues/{issueId}
 ```
 
-코드 파일과 내부 구현 세부 사항은 Tria 웹에서 제공한다.
+코드 파일과 내부 구현 세부 사항은 Tria 웹에서만 제공하고, notifyUrl로 나가는 통보에는 포함하지 않는다.
 
 ---
 
 # 17. 보안
 
 ## 웹 인증
+
+현재는 단일 세션 쿠키 기반 임시 게이트(`middleware.ts`)로 `/issues`, `/settings`와 관련 쓰기 API만 막고 있다. 정식 SSO 붙이기 전까지의 임시 방어선이며, 정식 인증은 로드맵 항목으로 남겨둔다.
+
+목표(로드맵):
 
 * 회사 Google 계정 또는 SSO
 * 내부 사용자만 접근
@@ -908,11 +925,10 @@ https://tria.company.com/issues/{issueId}
 * 재전송 공격 방지를 위한 timestamp와 nonce
 * 완료된 실행에 대한 중복 callback 방지
 
-## Asana 웹훅
+## 이슈 접수 API
 
-* 핸드셰이크 secret 저장
-* HMAC 서명 검증
-* 웹훅 수신 후 최신 태스크를 API로 재조회
+* `TRIA_INGEST_API_KEY` 공유 secret으로 호출자 인증
+* Asana 등 외부 웹훅의 핸드셰이크/서명 검증은 core가 아니라 각 소스 어댑터(5.4절)가 담당
 
 ## AI 실행
 
@@ -926,20 +942,11 @@ https://tria.company.com/issues/{issueId}
 
 # 18. 중복 및 동시 실행
 
-중복 기준:
+과거처럼 "이슈 수정 버전(`sourceModifiedAt`)"을 비교해 자동 중복을 막지 않는다 — 접수 API 호출 자체가 명시적 분석 요청이므로, 언제 다시 호출할지는 호출자(어댑터)의 책임이다.
 
-```text
-asanaTaskGid
-+ sourceModifiedAt
-```
+Tria가 직접 막는 건 다음 하나뿐이다.
 
-권장 DB 제약:
-
-```text
-UNIQUE(issueId, sourceModifiedAt)
-```
-
-동일 이슈의 분석이 실행 중이면 새 분석을 시작하지 않는다.
+* 동일 이슈에 대해 QUEUED/RUNNING 상태인 실행이 이미 있으면 새 분석을 시작하지 않고 그 실행 정보를 반환한다 (in-flight 체크, 5.2절).
 
 프로젝트별 동시 실행 제한을 둔다.
 
@@ -960,9 +967,9 @@ UNIQUE(issueId, sourceModifiedAt)
 
 * 분석 상태 `FAILED`
 * 접근 권한 및 저장소 설정 오류 표시
-* Asana 상태 `분석 실패`
+* notifyUrl이 있으면 실패로 통보
 
-## Codex 실패
+## Codex/Gemini 실패
 
 * JSON 생성 실패 저장
 * GitHub Actions 실행 링크 제공
@@ -974,10 +981,10 @@ UNIQUE(issueId, sourceModifiedAt)
 * idempotency key 사용
 * 완료되지 않은 실행 감지 작업 추가
 
-## Asana API 실패
+## notifyUrl 통보 실패
 
-* 분석 결과는 DB에 우선 저장
-* Asana 갱신 작업 재시도
+* 분석 결과는 DB에 우선 저장 (통보 실패가 결과 저장을 막지 않음)
+* best-effort — 재시도는 호출자(어댑터) 쪽에서 필요하면 상태 폴링으로 보완
 * 웹에서는 분석 완료 상태 유지
 
 ---
@@ -1017,6 +1024,10 @@ UNIQUE(issueId, sourceModifiedAt)
 ---
 
 # 21. 운영 로드맵
+
+## 인증 전환 (우선순위 높음)
+
+* 임시 세션 쿠키 게이트를 회사 Google 계정 또는 SSO로 교체 (17장)
 
 ## v1.1 비용 절감
 
@@ -1060,19 +1071,18 @@ UNIQUE(issueId, sourceModifiedAt)
 다음 전체 흐름이 안정적으로 동작해야 한다.
 
 ```text
-Asana 이슈 작성
-→ AI 분석 요청
-→ 웹훅 수신
-→ 이슈 DB 동기화
+POST /api/issues 호출 (5.1절)
+→ 이슈 upsert
 → GitHub Actions 실행
 → 대상 비공개 저장소 인증 및 checkout
-→ Codex 분석
+→ Codex/Gemini 분석
 → 결과 검증
 → Callback
 → Tria 웹 결과 표시
-→ Asana 요약 댓글
-→ 개발 검토 상태 변경
+→ (notifyUrl이 있으면) 호출자에게 결과 통보
 ```
+
+Asana를 소스로 쓰는 경우 이 흐름의 시작은 5.4절 어댑터가 대신한다.
 
 운영형 Tria의 성공은 모든 이슈의 원인을 맞히는 것이 아니다.
 
