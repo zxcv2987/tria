@@ -73,7 +73,17 @@ function urgencyRank(run: AnalysisRun | undefined): number {
 
 // 배지(status-badges.tsx)와 같은 상태를 가리키므로 라벨은 항상 그쪽 상수를 재사용한다 —
 // 별도 문자열을 두면 화면 안에서 같은 값이 두 가지 이름으로 불리는 문제가 생긴다.
-const METRIC_TILES = [
+// 아래 필터 드롭다운이 "분석 상태"/"AI 판정" 두 그룹으로 나뉘어 있으므로,
+// 타일도 같은 필드끼리 붙여 놓고 그 사이만 구분선으로 나눈다(뒤섞지 않는다).
+type MetricTile = {
+  key: MetricKey;
+  label: string;
+  field: "analysisStatus" | "resultType";
+  value: string;
+  dot: string;
+};
+
+const STATUS_TILES: readonly MetricTile[] = [
   {
     key: "queued",
     label: ANALYSIS_STATUS_LABEL.QUEUED,
@@ -89,6 +99,16 @@ const METRIC_TILES = [
     dot: "bg-sky-500",
   },
   {
+    key: "failed",
+    label: ANALYSIS_STATUS_LABEL.FAILED,
+    field: "analysisStatus",
+    value: "FAILED",
+    dot: "bg-red-500",
+  },
+];
+
+const RESULT_TILES: readonly MetricTile[] = [
+  {
     key: "review",
     label: RESULT_TYPE_LABEL.CODE_LIKELY,
     field: "resultType",
@@ -102,20 +122,7 @@ const METRIC_TILES = [
     value: "NEED_MORE_INFO",
     dot: "bg-zinc-400 dark:bg-zinc-500",
   },
-  {
-    key: "failed",
-    label: ANALYSIS_STATUS_LABEL.FAILED,
-    field: "analysisStatus",
-    value: "FAILED",
-    dot: "bg-red-500",
-  },
-] as const satisfies readonly {
-  key: MetricKey;
-  label: string;
-  field: "analysisStatus" | "resultType";
-  value: string;
-  dot: string;
-}[];
+];
 
 const cardLinkClass =
   "rounded-xl border border-border bg-card p-3.5 shadow-xs transition-colors hover:bg-muted/40 dark:shadow-none";
@@ -171,36 +178,43 @@ export function IssueListTable({ issues, runs, projects }: Props) {
     }
   }
 
+  function renderTile(tile: MetricTile) {
+    const active =
+      tile.field === "analysisStatus"
+        ? analysisStatus === tile.value
+        : resultType === tile.value;
+    return (
+      <button
+        key={tile.key}
+        type="button"
+        aria-pressed={active}
+        onClick={() => toggleTile(tile.field, tile.value)}
+        className={cn(
+          metricCardClass,
+          "w-[calc(50%-0.375rem)] text-left transition-colors sm:w-auto sm:flex-1 hover:bg-muted/60",
+          active && "bg-muted ring-1 ring-ring/40 hover:bg-muted",
+        )}
+      >
+        <p className={`flex items-center gap-1.5 ${helpTextClass}`}>
+          <span className={`size-1.5 shrink-0 rounded-full ${tile.dot}`} />
+          {tile.label}
+        </p>
+        <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+          {metrics[tile.key]}
+        </p>
+      </button>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {METRIC_TILES.map((tile) => {
-          const active =
-            tile.field === "analysisStatus"
-              ? analysisStatus === tile.value
-              : resultType === tile.value;
-          return (
-            <button
-              key={tile.key}
-              type="button"
-              aria-pressed={active}
-              onClick={() => toggleTile(tile.field, tile.value)}
-              className={cn(
-                metricCardClass,
-                "text-left transition-colors hover:bg-muted/60",
-                active && "bg-muted ring-1 ring-ring/40 hover:bg-muted",
-              )}
-            >
-              <p className={`flex items-center gap-1.5 ${helpTextClass}`}>
-                <span className={`size-1.5 shrink-0 rounded-full ${tile.dot}`} />
-                {tile.label}
-              </p>
-              <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
-                {metrics[tile.key]}
-              </p>
-            </button>
-          );
-        })}
+      <div className="flex flex-wrap gap-3">
+        {STATUS_TILES.map(renderTile)}
+        <div
+          aria-hidden="true"
+          className="hidden w-px self-stretch bg-border sm:block"
+        />
+        {RESULT_TILES.map(renderTile)}
       </div>
 
       <div className="flex flex-wrap gap-2.5">
