@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import type { AnalysisResult as AnalysisResultType } from "@tria/analysis";
 import {
   AnalysisStatusBadge,
@@ -74,8 +76,10 @@ function StringList({
 export function IssueDetailCard({ issue, run, analysisResult }: Props) {
   const router = useRouter();
   const { alert, confirm, dialog } = useAlertDialog();
+  const [isReanalyzing, setIsReanalyzing] = useState(false);
 
   async function handleReanalyze() {
+    setIsReanalyzing(true);
     try {
       const res = await fetch(`/api/issues/${issue.id}/analyze`, {
         method: "POST",
@@ -87,7 +91,10 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
     } catch (err) {
       await alert(
         err instanceof Error ? err.message : "재분석 요청 중 오류가 발생했습니다.",
+        { variant: "error" },
       );
+    } finally {
+      setIsReanalyzing(false);
     }
   }
 
@@ -104,6 +111,7 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
     } catch (err) {
       await alert(
         err instanceof Error ? err.message : "삭제 중 오류가 발생했습니다.",
+        { variant: "error" },
       );
     }
   }
@@ -145,6 +153,7 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
     } catch (err) {
       await alert(
         err instanceof Error ? err.message : "피드백 저장 중 오류가 발생했습니다.",
+        { variant: "error" },
       );
     }
   }
@@ -164,8 +173,12 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
     <div className="flex flex-col gap-6">
       {dialog}
       <div className="flex flex-wrap gap-2">
-        <Button type="button" onClick={handleReanalyze}>
-          재분석
+        <Button
+          type="button"
+          onClick={handleReanalyze}
+          disabled={isReanalyzing}
+        >
+          {isReanalyzing ? "재분석 중..." : "재분석"}
         </Button>
         {issue.externalUrl && (
           <Button variant="outline" asChild>
@@ -188,38 +201,6 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
           삭제
         </Button>
       </div>
-
-      <section className={`${cardClass} flex flex-col gap-5`}>
-        <h2 className={sectionTitleClass}>원본 이슈</h2>
-        <Field label="제목" value={issue.title} />
-        <Field label="본문" value={issue.description} />
-        <Field label="재현 절차" value={issue.reproductionSteps} />
-        <Field label="기대 결과" value={issue.expectedResult} />
-        <Field label="실제 결과" value={issue.actualResult} />
-        <Field label="발생 URL" value={issue.occurredUrl} />
-        <Field label="환경" value={issue.environment} />
-        <Field
-          label="첨부파일"
-          value={
-            issue.attachments.length > 0 ? issue.attachments.join(", ") : null
-          }
-        />
-        <div className="flex flex-col gap-1.5">
-          <h3 className={metaLabelClass}>원본</h3>
-          {issue.externalUrl ? (
-            <a
-              href={issue.externalUrl}
-              target="_blank"
-              rel="noreferrer"
-              className={`break-all ${linkClass}`}
-            >
-              {issue.externalUrl}
-            </a>
-          ) : (
-            <p className={helpTextClass}>{issue.source}</p>
-          )}
-        </div>
-      </section>
 
       <section className={`${cardClass} flex flex-col gap-5`}>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -315,6 +296,47 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
           </>
         )}
       </section>
+
+      <details className={`${cardClass} group`}>
+        <summary
+          className={`flex cursor-pointer list-none items-center justify-between ${sectionTitleClass} [&::-webkit-details-marker]:hidden`}
+        >
+          원본 이슈
+          <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="mt-5 flex flex-col gap-5">
+          <Field label="제목" value={issue.title} />
+          <Field label="본문" value={issue.description} />
+          <Field label="재현 절차" value={issue.reproductionSteps} />
+          <Field label="기대 결과" value={issue.expectedResult} />
+          <Field label="실제 결과" value={issue.actualResult} />
+          <Field label="발생 URL" value={issue.occurredUrl} />
+          <Field label="환경" value={issue.environment} />
+          <Field
+            label="첨부파일"
+            value={
+              issue.attachments.length > 0
+                ? issue.attachments.join(", ")
+                : null
+            }
+          />
+          <div className="flex flex-col gap-1.5">
+            <h3 className={metaLabelClass}>원본</h3>
+            {issue.externalUrl ? (
+              <a
+                href={issue.externalUrl}
+                target="_blank"
+                rel="noreferrer"
+                className={`break-all ${linkClass}`}
+              >
+                {issue.externalUrl}
+              </a>
+            ) : (
+              <p className={helpTextClass}>{issue.source}</p>
+            )}
+          </div>
+        </div>
+      </details>
 
       <section className={`${cardClass} flex flex-col gap-3.5`}>
         <h2 className={sectionTitleClass}>분석 피드백</h2>

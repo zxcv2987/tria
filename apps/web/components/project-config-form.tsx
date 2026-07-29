@@ -113,6 +113,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
     } catch (err) {
       await alert(
         err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
+        { variant: "error" },
       );
     }
   }
@@ -131,6 +132,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
     } catch (err) {
       await alert(
         err instanceof Error ? err.message : "삭제 중 오류가 발생했습니다.",
+        { variant: "error" },
       );
     }
   }

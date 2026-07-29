@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,14 +10,19 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { bodyTextClass, sectionTitleClass } from "@/components/ui/styles";
+import { cn } from "@/lib/utils";
+
+type AlertVariant = "default" | "error";
 
 type AlertState = {
   kind: "alert";
   title: string;
   description: string;
+  variant: AlertVariant;
   resolve: () => void;
 };
 
@@ -43,13 +49,26 @@ export function useAlertDialog() {
     else current.resolve();
   }, []);
 
-  const alert = useCallback((description: string, title = "알림") => {
-    return new Promise<void>((resolve) => {
-      const next: AlertState = { kind: "alert", title, description, resolve };
-      stateRef.current = next;
-      setState(next);
-    });
-  }, []);
+  const alert = useCallback(
+    (
+      description: string,
+      options?: { title?: string; variant?: AlertVariant },
+    ) => {
+      const variant = options?.variant ?? "default";
+      return new Promise<void>((resolve) => {
+        const next: AlertState = {
+          kind: "alert",
+          title: options?.title ?? (variant === "error" ? "오류" : "알림"),
+          description,
+          variant,
+          resolve,
+        };
+        stateRef.current = next;
+        setState(next);
+      });
+    },
+    [],
+  );
 
   const confirm = useCallback(
     (
@@ -80,7 +99,19 @@ export function useAlertDialog() {
     >
       <AlertDialogContent size="sm">
         <AlertDialogHeader>
-          <AlertDialogTitle className={sectionTitleClass}>
+          {state?.kind === "alert" && state.variant === "error" && (
+            <AlertDialogMedia className="bg-destructive/10 text-destructive">
+              <AlertTriangle />
+            </AlertDialogMedia>
+          )}
+          <AlertDialogTitle
+            className={cn(
+              sectionTitleClass,
+              state?.kind === "alert" &&
+                state.variant === "error" &&
+                "text-destructive",
+            )}
+          >
             {state?.title}
           </AlertDialogTitle>
           <AlertDialogDescription className={bodyTextClass}>
