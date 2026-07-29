@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   helpTextClass,
   linkClass,
@@ -44,14 +45,9 @@ type Props = {
   projects: ProjectConfig[];
 };
 
-type MetricKey =
-  | "queued"
-  | "running"
-  | "review"
-  | "needInfo"
-  | "failed";
+type MetricKey = "queued" | "running" | "review" | "needInfo" | "failed";
 
-function metricFor(_issue: Issue, run: AnalysisRun | undefined): MetricKey | null {
+function metricFor(run: AnalysisRun | undefined): MetricKey | null {
   if (run?.status === "QUEUED") return "queued";
   if (run?.status === "RUNNING") return "running";
   if (run?.status === "FAILED") return "failed";
@@ -59,6 +55,55 @@ function metricFor(_issue: Issue, run: AnalysisRun | undefined): MetricKey | nul
   if (run?.resultType === "CODE_LIKELY") return "review";
   return null;
 }
+
+// 배지(status-badges.tsx)와 같은 상태를 가리키므로 라벨은 항상 그쪽 상수를 재사용한다 —
+// 별도 문자열을 두면 화면 안에서 같은 값이 두 가지 이름으로 불리는 문제가 생긴다.
+const METRIC_TILES = [
+  {
+    key: "queued",
+    label: ANALYSIS_STATUS_LABEL.QUEUED,
+    field: "analysisStatus",
+    value: "QUEUED",
+    dot: "bg-zinc-400 dark:bg-zinc-500",
+  },
+  {
+    key: "running",
+    label: ANALYSIS_STATUS_LABEL.RUNNING,
+    field: "analysisStatus",
+    value: "RUNNING",
+    dot: "bg-sky-500",
+  },
+  {
+    key: "review",
+    label: RESULT_TYPE_LABEL.CODE_LIKELY,
+    field: "resultType",
+    value: "CODE_LIKELY",
+    dot: "bg-amber-500",
+  },
+  {
+    key: "needInfo",
+    label: RESULT_TYPE_LABEL.NEED_MORE_INFO,
+    field: "resultType",
+    value: "NEED_MORE_INFO",
+    dot: "bg-zinc-400 dark:bg-zinc-500",
+  },
+  {
+    key: "failed",
+    label: ANALYSIS_STATUS_LABEL.FAILED,
+    field: "analysisStatus",
+    value: "FAILED",
+    dot: "bg-red-500",
+  },
+] as const satisfies readonly {
+  key: MetricKey;
+  label: string;
+  field: "analysisStatus" | "resultType";
+  value: string;
+  dot: string;
+}[];
+
+const cardLinkClass =
+  "rounded-xl border border-border bg-card p-3.5 shadow-xs transition-colors hover:bg-muted/40 dark:shadow-none";
 
 export function IssueListTable({ issues, runs, projects }: Props) {
   const [project, setProject] = useState("");
@@ -68,7 +113,7 @@ export function IssueListTable({ issues, runs, projects }: Props) {
   const projectKeys = projects.map((p) => p.key);
 
   const metrics = useMemo(() => {
-    const counts = {
+    const counts: Record<MetricKey, number> = {
       queued: 0,
       running: 0,
       review: 0,
@@ -76,7 +121,7 @@ export function IssueListTable({ issues, runs, projects }: Props) {
       failed: 0,
     };
     for (const issue of issues) {
-      const key = metricFor(issue, getLatestRun(runs, issue.id));
+      const key = metricFor(getLatestRun(runs, issue.id));
       if (key) counts[key] += 1;
     }
     return counts;
@@ -96,25 +141,44 @@ export function IssueListTable({ issues, runs, projects }: Props) {
     });
   }, [issues, runs, project, analysisStatus, resultType, query]);
 
+  function toggleTile(field: "analysisStatus" | "resultType", value: string) {
+    if (field === "analysisStatus") {
+      setAnalysisStatus((prev) => (prev === value ? "" : value));
+    } else {
+      setResultType((prev) => (prev === value ? "" : value));
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {(
-          [
-            ["queued", "분석 대기", metrics.queued],
-            ["running", "분석 중", metrics.running],
-            ["review", "개발 검토", metrics.review],
-            ["needInfo", "추가 정보 필요", metrics.needInfo],
-            ["failed", "분석 실패", metrics.failed],
-          ] as const
-        ).map(([key, label, count]) => (
-          <div key={key} className={metricCardClass}>
-            <p className={helpTextClass}>{label}</p>
-            <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
-              {count}
-            </p>
-          </div>
-        ))}
+        {METRIC_TILES.map((tile) => {
+          const active =
+            tile.field === "analysisStatus"
+              ? analysisStatus === tile.value
+              : resultType === tile.value;
+          return (
+            <button
+              key={tile.key}
+              type="button"
+              aria-pressed={active}
+              onClick={() => toggleTile(tile.field, tile.value)}
+              className={cn(
+                metricCardClass,
+                "text-left transition-colors hover:bg-muted/60",
+                active && "bg-muted ring-1 ring-ring/40 hover:bg-muted",
+              )}
+            >
+              <p className={`flex items-center gap-1.5 ${helpTextClass}`}>
+                <span className={`size-1.5 shrink-0 rounded-full ${tile.dot}`} />
+                {tile.label}
+              </p>
+              <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+                {metrics[tile.key]}
+              </p>
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex flex-wrap gap-2.5">
@@ -179,8 +243,40 @@ export function IssueListTable({ issues, runs, projects }: Props) {
         />
       </div>
 
-      <div className={tableWrapClass}>
-        <table className={`${tableClass} min-w-[56rem]`}>
+      {/* 모바일(<md): 카드형 — 제목 + 분석 상태 + AI 판정을 항상 노출.
+          데스크톱(md+): 기존 7열 표, 가로 스크롤 없이 한 화면에 다 보임. */}
+      <div className="flex flex-col gap-2.5 md:hidden">
+        {filtered.map((issue) => {
+          const run = getLatestRun(runs, issue.id);
+          return (
+            <Link
+              key={issue.id}
+              href={`/issues/${issue.id}`}
+              className={`${cardLinkClass} flex flex-col gap-2`}
+            >
+              <p className="font-medium text-foreground">{issue.title}</p>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {run ? <AnalysisStatusBadge status={run.status} /> : null}
+                {run?.resultType ? (
+                  <ResultBadge result={run.resultType} />
+                ) : null}
+              </div>
+              <p className={helpTextClass}>
+                {getProjectName(projects, issue.projectKey)} · {issue.source} ·{" "}
+                {formatDateTime(issue.createdAt)}
+              </p>
+            </Link>
+          );
+        })}
+        {filtered.length === 0 && (
+          <p className={`${helpTextClass} py-10 text-center`}>
+            조건에 맞는 이슈가 없습니다.
+          </p>
+        )}
+      </div>
+
+      <div className={`hidden md:block ${tableWrapClass}`}>
+        <table className={tableClass}>
           <thead className={tableHeadClass}>
             <tr>
               <th className={tableHeadCellClass}>이슈 제목</th>
