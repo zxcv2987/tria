@@ -56,6 +56,21 @@ function metricFor(run: AnalysisRun | undefined): MetricKey | null {
   return null;
 }
 
+// 지금 처리해야 할 이슈가 먼저 보이도록 정렬 — 등록 순서가 아니라 "당장 할 일이
+// 있는가"를 기준으로 한다. FAILED(분석 자체가 막힘)가 가장 급하고,
+// CODE_LIKELY/CHECK_EXTERNAL/NEED_MORE_INFO는 개발자가 검토할 게 있는 상태,
+// RUNNING/QUEUED는 아직 할 일이 없는 상태다.
+function urgencyRank(run: AnalysisRun | undefined): number {
+  if (!run) return 6;
+  if (run.status === "FAILED") return 0;
+  if (run.resultType === "CODE_LIKELY") return 1;
+  if (run.resultType === "CHECK_EXTERNAL") return 2;
+  if (run.resultType === "NEED_MORE_INFO") return 3;
+  if (run.status === "RUNNING") return 4;
+  if (run.status === "QUEUED") return 5;
+  return 6;
+}
+
 // 배지(status-badges.tsx)와 같은 상태를 가리키므로 라벨은 항상 그쪽 상수를 재사용한다 —
 // 별도 문자열을 두면 화면 안에서 같은 값이 두 가지 이름으로 불리는 문제가 생긴다.
 const METRIC_TILES = [
@@ -128,17 +143,24 @@ export function IssueListTable({ issues, runs, projects }: Props) {
   }, [issues, runs]);
 
   const filtered = useMemo(() => {
-    return issues.filter((issue) => {
-      const run = getLatestRun(runs, issue.id);
-      if (project && issue.projectKey !== project) return false;
-      if (analysisStatus && run?.status !== analysisStatus) return false;
-      if (resultType && run?.resultType !== resultType) return false;
-      if (query.trim()) {
-        const q = query.trim().toLowerCase();
-        if (!issue.title.toLowerCase().includes(q)) return false;
-      }
-      return true;
-    });
+    return issues
+      .filter((issue) => {
+        const run = getLatestRun(runs, issue.id);
+        if (project && issue.projectKey !== project) return false;
+        if (analysisStatus && run?.status !== analysisStatus) return false;
+        if (resultType && run?.resultType !== resultType) return false;
+        if (query.trim()) {
+          const q = query.trim().toLowerCase();
+          if (!issue.title.toLowerCase().includes(q)) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const rankDiff =
+          urgencyRank(getLatestRun(runs, a.id)) -
+          urgencyRank(getLatestRun(runs, b.id));
+        return rankDiff !== 0 ? rankDiff : b.createdAt.localeCompare(a.createdAt);
+      });
   }, [issues, runs, project, analysisStatus, resultType, query]);
 
   function toggleTile(field: "analysisStatus" | "resultType", value: string) {

@@ -39,12 +39,18 @@ const FEEDBACK_OPTIONS = [
   { value: "WRONG", label: "잘못된 분석" },
 ] as const;
 
+// 일부 접수 경로가 실제 개행 대신 이스케이프된 "\n" 문자열 그대로 보낸다 —
+// whitespace-pre-wrap은 진짜 개행에만 반응하므로 렌더 전에 정규화한다.
+function normalizeNewlines(value: string): string {
+  return value.replace(/\\n/g, "\n");
+}
+
 function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="flex flex-col gap-1.5">
       <h3 className={metaLabelClass}>{label}</h3>
       <p className={`whitespace-pre-wrap ${bodyTextClass}`}>
-        {value?.trim() ? value : "-"}
+        {value?.trim() ? normalizeNewlines(value) : "-"}
       </p>
     </div>
   );

@@ -29,7 +29,7 @@ export default async function IssueDetailPage({ params }: Props) {
               이슈 목록
             </Link>
             {" / "}
-            <span className="font-mono text-[0.7rem]">{issue.id}</span>
+            <span className="font-mono text-xs">{issue.id}</span>
           </>
         }
         title={issue.title}
