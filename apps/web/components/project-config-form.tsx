@@ -11,13 +11,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAlertDialog } from "@/components/ui/use-alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  btnGhostClass,
-  btnPrimaryClass,
   cardClass,
   fieldLabelClass,
   helpTextClass,
-  inputClass,
   sectionTitleClass,
   tableCellClass,
   tableClass,
@@ -164,20 +164,22 @@ export function ProjectConfigForm({ initialProjects }: Props) {
                 </td>
                 <td className={tableCellClass}>
                   <div className="flex gap-1">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => startEdit(p)}
-                      className={btnGhostClass}
                     >
                       수정
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="destructive"
+                      size="sm"
                       onClick={() => handleDelete(p.id)}
-                      className="inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600/10 dark:text-red-400 dark:hover:bg-red-950"
                     >
                       삭제
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>
@@ -195,13 +197,13 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             {editingId ? "프로젝트 설정 수정" : "프로젝트 설정 추가"}
           </h2>
           {editingId && (
-            <button type="button" onClick={startCreate} className={btnGhostClass}>
+            <Button type="button" variant="ghost" size="sm" onClick={startCreate}>
               새로 추가
-            </button>
+            </Button>
           )}
         </div>
 
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-muted-foreground">
           여기 등록해도 자동으로 이벤트가 오지 않습니다. 이 키를
           `projectKey`로 지정해 <code>POST /api/issues</code>를 직접
           호출해야 실제로 연결됩니다.
@@ -218,14 +220,13 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             <label htmlFor={field} className={fieldLabelClass}>
               {label}
             </label>
-            <input
+            <Input
               id={field}
               value={form[field]}
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, [field]: e.target.value }))
               }
               placeholder={placeholder}
-              className={inputClass}
             />
           </div>
         ))}
@@ -276,15 +277,14 @@ export function ProjectConfigForm({ initialProjects }: Props) {
                 설치된 저장소 목록을 못 불러와서 직접 입력으로 대체합니다.
               </p>
               <div className="flex gap-2">
-                <input
+                <Input
                   value={form.githubOwner}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, githubOwner: e.target.value }))
                   }
                   placeholder="tria-org"
-                  className={inputClass}
                 />
-                <input
+                <Input
                   value={form.githubRepository}
                   onChange={(e) =>
                     setForm((prev) => ({
@@ -293,21 +293,20 @@ export function ProjectConfigForm({ initialProjects }: Props) {
                     }))
                   }
                   placeholder="classroom-web"
-                  className={inputClass}
                 />
               </div>
             </>
           )}
         </div>
 
-        <label className="flex items-center gap-2.5 text-sm text-zinc-700 dark:text-zinc-300">
+        <label className="flex items-center gap-2.5 text-sm text-foreground">
           <input
             type="checkbox"
             checked={form.isActive}
             onChange={(e) =>
               setForm((prev) => ({ ...prev, isActive: e.target.checked }))
             }
-            className="size-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900/20 dark:border-zinc-600"
+            className="size-4 rounded border-input accent-primary focus:ring-2 focus:ring-ring/50"
           />
           활성화
         </label>
@@ -316,7 +315,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
           <label htmlFor="analysisPrompt" className={fieldLabelClass}>
             분석 프롬프트 설정
           </label>
-          <textarea
+          <Textarea
             id="analysisPrompt"
             value={form.analysisPrompt}
             onChange={(e) =>
@@ -326,13 +325,13 @@ export function ProjectConfigForm({ initialProjects }: Props) {
               }))
             }
             rows={4}
-            className={`${inputClass} resize-y`}
+            className="resize-y"
           />
         </div>
 
-        <button type="submit" className={`${btnPrimaryClass} self-start`}>
+        <Button type="submit" className="self-start">
           {editingId ? "저장" : "추가"}
-        </button>
+        </Button>
       </form>
     </div>
   );

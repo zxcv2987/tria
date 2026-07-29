@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Noto_Sans_KR, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
+import { Geist_Mono } from "next/font/google";
 import { AppNav } from "@/components/app-nav";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
-const notoSansKr = Noto_Sans_KR({
-  variable: "--font-sans-kr",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const pretendard = localFont({
+  src: "../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
+  variable: "--font-pretendard",
+  weight: "45 920",
   display: "swap",
 });
 
@@ -31,7 +32,7 @@ export default function RootLayout({
       lang="ko"
       className={cn(
         "h-full antialiased font-sans",
-        notoSansKr.variable,
+        pretendard.variable,
         geistMono.variable,
       )}
     >

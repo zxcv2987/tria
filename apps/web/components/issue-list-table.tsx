@@ -23,9 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import {
   helpTextClass,
-  inputClass,
   linkClass,
   metricCardClass,
   tableCellClass,
@@ -110,7 +110,7 @@ export function IssueListTable({ issues, runs, projects }: Props) {
         ).map(([key, label, count]) => (
           <div key={key} className={metricCardClass}>
             <p className={helpTextClass}>{label}</p>
-            <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-zinc-900 dark:text-zinc-50">
+            <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
               {count}
             </p>
           </div>
@@ -171,11 +171,11 @@ export function IssueListTable({ issues, runs, projects }: Props) {
           </SelectContent>
         </Select>
 
-        <input
+        <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="제목 검색"
-          className={`${inputClass} h-9 min-w-[12rem] flex-1 py-0`}
+          className="h-9 min-w-[12rem] flex-1 py-0"
         />
       </div>
 
@@ -200,12 +200,12 @@ export function IssueListTable({ issues, runs, projects }: Props) {
                   <td className={tableCellClass}>
                     <Link
                       href={`/issues/${issue.id}`}
-                      className="font-medium text-zinc-900 underline-offset-2 hover:underline dark:text-zinc-100"
+                      className="font-medium text-foreground underline-offset-2 hover:underline"
                     >
                       {issue.title}
                     </Link>
                   </td>
-                  <td className={`${tableCellClass} text-zinc-700 dark:text-zinc-300`}>
+                  <td className={`${tableCellClass} text-foreground`}>
                     {getProjectName(projects, issue.projectKey)}
                   </td>
                   <td className={tableCellClass}>
@@ -219,7 +219,7 @@ export function IssueListTable({ issues, runs, projects }: Props) {
                         {issue.source}
                       </a>
                     ) : (
-                      <span className="text-zinc-600 dark:text-zinc-400">
+                      <span className="text-muted-foreground">
                         {issue.source}
                       </span>
                     )}
@@ -234,10 +234,10 @@ export function IssueListTable({ issues, runs, projects }: Props) {
                       "-"
                     )}
                   </td>
-                  <td className={`${tableCellClass} whitespace-nowrap text-zinc-600 dark:text-zinc-400`}>
+                  <td className={`${tableCellClass} whitespace-nowrap text-muted-foreground`}>
                     {formatDateTime(issue.createdAt)}
                   </td>
-                  <td className={`${tableCellClass} whitespace-nowrap text-zinc-600 dark:text-zinc-400`}>
+                  <td className={`${tableCellClass} whitespace-nowrap text-muted-foreground`}>
                     {formatDateTime(run?.finishedAt ?? run?.startedAt)}
                   </td>
                 </tr>
@@ -247,7 +247,7 @@ export function IssueListTable({ issues, runs, projects }: Props) {
               <tr>
                 <td
                   colSpan={7}
-                  className={`${tableCellClass} py-10 text-center text-zinc-500 dark:text-zinc-400`}
+                  className={`${tableCellClass} py-10 text-center text-muted-foreground`}
                 >
                   조건에 맞는 이슈가 없습니다.
                 </td>

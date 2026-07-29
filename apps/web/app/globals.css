@@ -12,8 +12,11 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  /* Deep teal accent — Restrained 전략: 무채색 + 액센트 1개.
+     판정/상태 배지의 호박(amber)·하늘(sky)·에메랄드(emerald)·빨강(red)과
+     구분되도록 hue 200(cyan과 green 사이)을 사용한다. */
+  --primary: oklch(0.42 0.09 200);
+  --primary-foreground: oklch(0.98 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -23,7 +26,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.88 0 0);
   --input: oklch(0.88 0 0);
-  --ring: oklch(0.45 0 0);
+  --ring: oklch(0.42 0.09 200);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -32,16 +35,12 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.42 0.09 200);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  --surface: #ffffff;
-  --surface-muted: #fafafa;
-  --border-strong: #d4d4d8;
-  --muted-soft: #71717a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -52,8 +51,8 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
+    --primary: oklch(0.75 0.1 200);
+    --primary-foreground: oklch(0.16 0.02 200);
     --secondary: oklch(0.269 0 0);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);
@@ -63,7 +62,7 @@
     --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 12%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
+    --ring: oklch(0.75 0.1 200);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -71,29 +70,21 @@
     --chart-5: oklch(0.269 0 0);
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.75 0.1 200);
+    --sidebar-primary-foreground: oklch(0.16 0.02 200);
     --sidebar-accent: oklch(0.269 0 0);
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
-    --surface: #18181b;
-    --surface-muted: #27272a;
-    --border-strong: #52525b;
-    --muted-soft: #a1a1aa;
   }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-surface: var(--surface);
-  --color-surface-muted: var(--surface-muted);
   --color-border: var(--border);
-  --color-border-strong: var(--border-strong);
   --color-muted: var(--muted);
-  --color-muted-soft: var(--muted-soft);
-  --font-sans: var(--font-sans-kr), "Apple SD Gothic Neo", "Malgun Gothic",
+  --font-sans: var(--font-pretendard), "Apple SD Gothic Neo", "Malgun Gothic",
     sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
     monospace;

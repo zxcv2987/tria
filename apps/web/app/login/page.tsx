@@ -3,7 +3,9 @@
 import { Suspense, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageHeader, PageShell } from "@/components/ui/page";
-import { btnPrimaryClass, errorTextClass, fieldLabelClass, inputClass } from "@/components/ui/styles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { errorTextClass, fieldLabelClass } from "@/components/ui/styles";
 
 function LoginForm() {
   const router = useRouter();
@@ -34,11 +36,10 @@ function LoginForm() {
         <label htmlFor="username" className={fieldLabelClass}>
           아이디
         </label>
-        <input
+        <Input
           id="username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className={inputClass}
           autoFocus
         />
       </div>
@@ -46,18 +47,17 @@ function LoginForm() {
         <label htmlFor="password" className={fieldLabelClass}>
           비밀번호
         </label>
-        <input
+        <Input
           id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className={inputClass}
         />
       </div>
       {error && <p className={errorTextClass}>{error}</p>}
-      <button type="submit" className={`${btnPrimaryClass} self-start`}>
+      <Button type="submit" className="self-start">
         로그인
-      </button>
+      </Button>
     </form>
   );
 }
