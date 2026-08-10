@@ -6,8 +6,6 @@ import { buildPrompt } from "./build-prompt";
 import { validateEvidence } from "./validate-evidence";
 import { sendCallback } from "./send-callback";
 import { codexProvider } from "./providers/codex";
-import { geminiProvider } from "./providers/gemini";
-import type { AnalysisProvider } from "./providers/types";
 
 const REQUIRED_ENV = [
   "ANALYSIS_RUN_ID",
@@ -17,21 +15,6 @@ const REQUIRED_ENV = [
   "CALLBACK_URL",
   "CALLBACK_SECRET",
 ] as const;
-
-/** ANALYSIS_PROVIDER=codex|gemini (기본 gemini — 무료 API 키로 테스트 가능). */
-function selectProvider(): AnalysisProvider {
-  const name = process.env.ANALYSIS_PROVIDER ?? "gemini";
-  if (name === "codex") return codexProvider;
-  if (name === "gemini") {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error(
-        "ANALYSIS_PROVIDER=gemini인데 GEMINI_API_KEY 환경변수가 없습니다."
-      );
-    }
-    return geminiProvider;
-  }
-  throw new Error(`알 수 없는 ANALYSIS_PROVIDER: ${name}`);
-}
 
 /** CALLBACK_URL(.../api/analysis/callback)에서 상태 갱신 엔드포인트 URL을 유도한다. */
 function buildStatusUrl(callbackUrl: string, analysisRunId: string): string {
@@ -103,9 +86,8 @@ async function main(): Promise<void> {
   await reportRunning(CALLBACK_URL, CALLBACK_SECRET, ANALYSIS_RUN_ID);
 
   try {
-    const provider = selectProvider();
     const prompt = await buildPrompt(ISSUE_TITLE, ISSUE_BODY);
-    const { result: parsed, usage } = await provider.run(
+    const { result: parsed, usage } = await codexProvider.run(
       prompt,
       TARGET_REPOSITORY_PATH
     );

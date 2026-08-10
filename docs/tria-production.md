@@ -10,7 +10,7 @@
 * 데이터베이스: PostgreSQL 또는 Supabase
 * 분석 실행 환경: GitHub Actions 또는 전용 Worker
 * 저장소 인증: GitHub App
-* 코드 분석: Codex CLI 또는 Gemini API (환경변수 `ANALYSIS_PROVIDER`로 선택, 동급 provider)
+* 코드 분석: Codex CLI (환경변수 `CODEX_AUTH_MODE`로 세션 로그인/API 키 인증 전환)
 * 주요 사용자: 행정·운영 담당자, 개발자, 개발 관리자
 
 ---
@@ -192,7 +192,7 @@ Tria Runner GitHub Actions
     ↓
 대상 저장소 인증 및 checkout
     ↓
-Codex CLI 또는 Gemini API 코드 분석
+Codex CLI 코드 분석
     ↓
 구조화된 분석 결과 생성
     ↓
@@ -334,7 +334,7 @@ Tria Runner는 별도 GitHub 저장소 또는 별도 상시 서버가 아니다.
 
 Tria 저장소에 포함된 실행 코드이며, 같은 저장소의 GitHub Actions가 시작될 때만 실행한다.
 
-분석 엔진은 `packages/runner/src/providers`에 provider 인터페이스로 분리돼 있으며, `ANALYSIS_PROVIDER` 환경변수로 Codex CLI 또는 Gemini API 중 선택한다. 둘 중 하나를 기본값으로 못박지 않고 동급 provider로 취급한다.
+분석 엔진은 OpenAI Codex CLI 하나만 쓴다. 인증 방식은 `packages/runner/src/providers/codex.ts`가 `CODEX_AUTH_MODE` 환경변수(`auto`(기본) | `session` | `api-key`)로 결정한다 — `auto`는 로컬 개발처럼 이미 `codex login` 세션이 있으면 그대로 쓰고, GitHub Actions처럼 세션이 없는 환경에서는 `OPENAI_API_KEY`로 자동 로그인한다. 로컬 개발과 CI를 코드 레벨에서 분기하지 않고, 이 플래그 하나로 두 실행 환경을 오갈 수 있다.
 
 담당 역할:
 
@@ -817,7 +817,7 @@ repository_dispatch
 → GitHub App 설치 토큰 생성
 → 대상 저장소를 target/에 checkout
 → packages/runner에서 분석 프롬프트 생성
-→ Codex 또는 Gemini 실행
+→ Codex 실행
 → analysis.json 생성
 → packages/analysis 스키마로 결과 검증
 → 실제 파일 경로 검증
@@ -969,7 +969,7 @@ Tria가 직접 막는 건 다음 하나뿐이다.
 * 접근 권한 및 저장소 설정 오류 표시
 * notifyUrl이 있으면 실패로 통보
 
-## Codex/Gemini 실패
+## Codex 실패
 
 * JSON 생성 실패 저장
 * GitHub Actions 실행 링크 제공
@@ -1075,7 +1075,7 @@ POST /api/issues 호출 (5.1절)
 → 이슈 upsert
 → GitHub Actions 실행
 → 대상 비공개 저장소 인증 및 checkout
-→ Codex/Gemini 분석
+→ Codex 분석
 → 결과 검증
 → Callback
 → Tria 웹 결과 표시

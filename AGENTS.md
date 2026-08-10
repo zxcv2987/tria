@@ -15,5 +15,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 영문 Conventional Commit 접두어 + 한국어 설명.
 
 - 형식: `<type>: <한국어 설명>`
-- 예: `feat: 분석 결과에 토큰 사용량 표시`, `fix: 이슈 목록이 빈 배열로 렌더되던 버그 수정`
+- 설명은 "~한다"류 문장체가 아니라 명사형으로 짧게 끝낸다. 예: `feat: 분석 결과에 토큰 사용량 표시`, `fix: 이슈 목록 빈 배열 렌더링 버그 수정` (X: `~표시한다`, `~수정한다`)
 - 자주 쓰는 type: `feat`, `fix`, `refactor`, `docs`, `chore`, `test`, `style`
