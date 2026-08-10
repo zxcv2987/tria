@@ -37,7 +37,7 @@ function signAppJwt(): string {
   return `${unsigned}.${base64url(signature)}`;
 }
 
-export type RepoRef = { owner: string; repo: string };
+export type RepoRef = { owner: string; repo: string; defaultBranch: string };
 
 /** TRIA_READER App이 설치된 모든 저장소 목록 (여러 installation에 걸쳐 합산). */
 export async function listAccessibleRepositories(): Promise<RepoRef[]> {
@@ -70,10 +70,18 @@ export async function listAccessibleRepositories(): Promise<RepoRef[]> {
     });
     if (!reposRes.ok) continue;
     const data = (await reposRes.json()) as {
-      repositories: { name: string; owner: { login: string } }[];
+      repositories: {
+        name: string;
+        owner: { login: string };
+        default_branch: string;
+      }[];
     };
     for (const r of data.repositories) {
-      repos.push({ owner: r.owner.login, repo: r.name });
+      repos.push({
+        owner: r.owner.login,
+        repo: r.name,
+        defaultBranch: r.default_branch,
+      });
     }
   }
 

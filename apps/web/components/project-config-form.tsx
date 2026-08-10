@@ -32,6 +32,16 @@ const REPO_NONE = "__none__";
 
 type RepoOption = { owner: string; repo: string };
 
+type SyncResponse = {
+  inserted: (Omit<ProjectConfig, "isActive" | "analysisPrompt">)[];
+  deactivatedIds: string[];
+  conflicts: {
+    githubOwner: string;
+    githubRepository: string;
+    conflictingKey: string;
+  }[];
+};
+
 type Props = {
   initialProjects: ProjectConfig[];
 };
@@ -52,6 +62,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [repoOptions, setRepoOptions] = useState<RepoOption[]>([]);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     fetch("/api/github/available-repos")
@@ -138,9 +149,63 @@ export function ProjectConfigForm({ initialProjects }: Props) {
     }
   }
 
+  async function handleSync() {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/projects/sync", { method: "POST" });
+      const data = (await res.json()) as SyncResponse & { error?: string };
+      if (!res.ok) throw new Error(data.error);
+
+      const deactivatedIds = new Set(data.deactivatedIds);
+      setProjects((prev) => [
+        ...prev.map((project) =>
+          deactivatedIds.has(project.id)
+            ? { ...project, isActive: false }
+            : project,
+        ),
+        ...data.inserted.map((project) => ({
+          ...project,
+          isActive: true,
+          analysisPrompt: "",
+        })),
+      ]);
+
+      let message = `${data.inserted.length}개 추가, ${data.deactivatedIds.length}개 비활성화`;
+      if (data.conflicts.length > 0) {
+        const conflictSummary = data.conflicts
+          .map(
+            (conflict) =>
+              `${conflict.githubOwner}/${conflict.githubRepository} (키 "${conflict.conflictingKey}" 중복)`,
+          )
+          .join(", ");
+        message += `\n${data.conflicts.length}개 충돌(수동 처리 필요): ${conflictSummary}`;
+      }
+      await alert(message, {
+        variant: data.conflicts.length > 0 ? "error" : undefined,
+      });
+    } catch (err) {
+      await alert(
+        err instanceof Error ? err.message : "동기화 중 오류가 발생했습니다.",
+        { variant: "error" },
+      );
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-8">
       {dialog}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={syncing}
+        onClick={handleSync}
+        className="self-start"
+      >
+        {syncing ? "동기화 중..." : "GitHub에서 동기화"}
+      </Button>
       <div className={tableWrapClass}>
         <table className={`${tableClass} min-w-[48rem]`}>
           <thead className={tableHeadClass}>
