@@ -39,13 +39,14 @@ type DialogState = AlertState | ConfirmState | null;
 
 export function useAlertDialog() {
   const [state, setState] = useState<DialogState>(null);
+  const [open, setOpen] = useState(false);
   const stateRef = useRef<DialogState>(null);
 
   const settle = useCallback((ok: boolean) => {
     const current = stateRef.current;
     if (!current) return;
     stateRef.current = null;
-    setState(null);
+    setOpen(false);
     if (current.kind === "confirm") current.resolve(ok);
     else current.resolve();
   }, []);
@@ -66,6 +67,7 @@ export function useAlertDialog() {
         };
         stateRef.current = next;
         setState(next);
+        setOpen(true);
       });
     },
     [],
@@ -93,6 +95,7 @@ export function useAlertDialog() {
         };
         stateRef.current = next;
         setState(next);
+        setOpen(true);
       });
     },
     [],
@@ -100,9 +103,9 @@ export function useAlertDialog() {
 
   const dialog = (
     <AlertDialog
-      open={state !== null}
-      onOpenChange={(open) => {
-        if (!open) settle(false);
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) settle(false);
       }}
     >
       <AlertDialogContent size="sm">
