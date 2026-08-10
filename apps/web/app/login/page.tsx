@@ -47,7 +47,7 @@ function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className={`${cardClass} flex w-full max-w-sm flex-col gap-5`}
+      className="strip-shape bg-strip p-6 text-foreground flex w-full max-w-sm flex-col gap-5"
       aria-busy={submitting}
     >
       <div className="flex flex-col gap-2">
@@ -102,14 +102,18 @@ function LoginFormFallback() {
 
 export default function LoginPage() {
   return (
+    <div className="console-grid grid min-h-[calc(100vh-4px)] place-items-center bg-console px-4 text-white">
     <PageShell width="narrow">
       <PageHeader
-        title="로그인"
-        description="관리자 계정으로 로그인하세요."
+        tone="inverse"
+        breadcrumb="TRIA CONTROL ACCESS"
+        title="조사 작업대 로그인"
+        description="허가된 관리자 계정으로 접속하세요."
       />
       <Suspense fallback={<LoginFormFallback />}>
         <LoginForm />
       </Suspense>
     </PageShell>
+    </div>
   );
 }

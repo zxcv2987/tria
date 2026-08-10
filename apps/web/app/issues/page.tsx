@@ -3,7 +3,6 @@ import { IssueListTable } from "@/components/issue-list-table";
 import { fetchIssuesPageData } from "@/lib/app-data";
 import { PageHeader, PageShell } from "@/components/ui/page";
 import { Button } from "@/components/ui/button";
-import { linkClass } from "@/components/ui/styles";
 
 export default async function IssuesPage() {
   const { issues, runs, projects } = await fetchIssuesPageData();
@@ -11,17 +10,9 @@ export default async function IssuesPage() {
   return (
     <PageShell width="wide">
       <PageHeader
-        breadcrumb={
-          <>
-            <Link href="/" className={linkClass}>
-              Tria
-            </Link>
-            {" / "}
-            이슈
-          </>
-        }
-        title="이슈 목록"
-        description="프로젝트별 이슈와 분석 상태를 한눈에 확인합니다."
+        breadcrumb="ISSUE OPERATIONS / LIVE QUEUE"
+        title="이슈 조사 큐"
+        description="분석 상태를 훑고, 검증된 코드 근거가 준비된 이슈부터 조사합니다."
         actions={
           <Button
             variant="ghost"

@@ -1,0 +1,68 @@
+{
+  "title": "Tria의 새로운 시각 세계",
+  "question": "조사 작업대의 시각 체계를 선택하세요. 추천 방향을 유지하거나, 대안을 택하거나, 새 후보를 요청할 수 있습니다.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Flight Progress Strip Desk",
+      "kicker": "추천 방향",
+      "lineage": "항공 관제용 flight progress strip과 현대적 운영 콘솔",
+      "thesis": "각 이슈는 상태를 이동하는 스트립이고, 검증된 코드 근거는 그 스트립에 연결된 조사 좌표다.",
+      "palette": ["#111713", "#E8E2D2", "#4F7F79", "#D98C3F"],
+      "materials": ["무광 관제 콘솔", "얇은 종이 스트립", "색인 탭", "정밀 격자"],
+      "viewport": "좌측 상태 레일과 중앙 이슈 스트립 보드가 한 화면에 놓이고, 선택한 이슈의 판정과 첫 코드 근거가 우측 조사 패널에 즉시 열린다.",
+      "risk": "항공 장식을 과하게 쓰면 제품보다 메타포가 먼저 보일 수 있다.",
+      "sketch": ".impeccable/sketches/flight-strip-desk.png"
+    },
+    {
+      "id": "challenger-hypercard",
+      "label": "Evidence Stack",
+      "lineage": "HyperCard shoebox stack",
+      "thesis": "이슈, 판정, 파일을 주소 가능한 흑백 카드로 연결해 조사 경로 자체를 탐색 기록으로 만든다.",
+      "palette": ["#F4F4EF", "#111111", "#A8A8A0", "#FFFFFF"],
+      "materials": ["1비트 픽셀", "디더 패턴", "손으로 그린 테두리", "반전 버튼"],
+      "viewport": "고정 비율 이슈 카드와 연결 버튼이 중앙 스택을 만들고, 정확한 뒤로가기가 조사 경로를 되짚는다.",
+      "risk": "개발자 문화에는 잘 맞지만 고밀도 목록과 긴 한국어 본문에서 향수 효과가 가독성을 앞설 수 있다.",
+      "case": "사용자 식별성은 높고 제품 명료성도 좋지만, 관제 스트립보다 대량 이슈 스캔에 불리하다.",
+      "sketch": ".impeccable/sketches/evidence-stack.png",
+      "hero": "https://impeccable.style/worlds/cards/medium-native-hypercard-stack-shoebox-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/medium-native-hypercard-stack-shoebox.webp"
+    },
+    {
+      "id": "alternate-trace-ledger",
+      "label": "Debugger Trace Ledger",
+      "lineage": "디버거 call stack, trace viewer, 엔지니어링 로그북",
+      "thesis": "이슈를 실행 추적의 시작점으로 두고 원인 후보까지의 코드 흐름을 단계별 조사 원장으로 만든다.",
+      "palette": ["#101419", "#DCE4E8", "#70A7A0", "#E2B04A"],
+      "materials": ["스택 프레임", "추적 눈금", "행 번호", "주석 마커"],
+      "viewport": "왼쪽 이슈 큐, 중앙 코드 흐름 원장, 오른쪽 판정과 다음 점검 영역이 하나의 연속된 추적선으로 연결된다.",
+      "risk": "실제 실행 추적 기능으로 오해되지 않도록 AI 추론과 검증된 근거를 명확히 구분해야 한다.",
+      "case": "개발자 식별성과 제품 명료성이 모두 높지만, 코드 흐름이 없는 판정에서도 구조가 유지돼야 한다.",
+      "sketch": ".impeccable/sketches/debugger-trace-ledger.png"
+    },
+    {
+      "id": "alternate-finding-aid",
+      "label": "Repository Finding Aid",
+      "lineage": "기술 아카이브의 finding aid와 도서관 색인 시스템",
+      "thesis": "저장소를 조사 기록 보관소로 보고 이슈마다 검증된 파일·심볼·실행 이력을 정밀 색인한다.",
+      "palette": ["#E7E1D4", "#252925", "#416B61", "#A65A3A"],
+      "materials": ["색인 카드", "분류 탭", "활자식 라벨", "보존 상자"],
+      "viewport": "좌측 프로젝트 색인, 중앙 이슈 카탈로그, 우측에 파일·심볼과 분석 한계가 계층형 finding aid로 열린다.",
+      "risk": "정적인 기록 보관소처럼 보이면 비동기 분석 상태와 즉시 행동성이 약해질 수 있다.",
+      "case": "근거 중심 제품 진실은 매우 선명하지만 실시간 운영감은 관제 스트립보다 낮다.",
+      "sketch": ".impeccable/sketches/repository-finding-aid.png"
+    }
+  ],
+  "reroll": true,
+  "canon": true,
+  "canonCard": {
+    "label": "정석적인 개발자 SaaS",
+    "thesis": "사이드바, KPI 카드, 데이터 테이블, 우측 상세 패널을 높은 완성도로 구성한다.",
+    "palette": ["#F7F8FA", "#172033", "#4361EE", "#DDE3EA"],
+    "materials": ["중립 표면", "얕은 카드", "표준 아이콘", "일관된 상태 배지"],
+    "viewport": "익숙한 사이드바와 요약 지표 아래에 필터 가능한 이슈 테이블이 놓인다.",
+    "risk": "학습 비용은 낮지만 Tria만의 조사 경험과 기억점이 사라진다.",
+    "sketch": ".impeccable/sketches/canon-saas.png"
+  },
+  "steer": true
+}

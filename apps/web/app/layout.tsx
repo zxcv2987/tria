@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Geist_Mono } from "next/font/google";
 import { AppNav } from "@/components/app-nav";
 import { cn } from "@/lib/utils";
 import "./globals.css";
@@ -10,11 +9,6 @@ const pretendard = localFont({
   variable: "--font-pretendard",
   weight: "45 920",
   display: "swap",
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -30,13 +24,10 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={cn(
-        "h-full antialiased font-sans",
-        pretendard.variable,
-        geistMono.variable,
-      )}
+      className={cn("h-full antialiased font-sans", pretendard.variable)}
     >
       <body className="flex min-h-full flex-col font-sans">
+        <template dangerouslySetInnerHTML={{ __html: "<!-- THESIS: Evidence moves through an operational strip desk; refuses the generic AI dashboard. OWN-WORLD: charcoal console, warm paper strips, teal controls, amber signals, clipped corners. STORY: scan the queue, open a case, verify repository evidence, choose the next action. FIRST VIEWPORT: dense issue queue beside a dominant evidence sequence and quiet control ledger. FORM: Flight Progress Strip Desk, seed 119d0d3e. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md. -->" }} />
         <AppNav />
         {children}
       </body>

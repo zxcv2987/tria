@@ -21,17 +21,9 @@ export default async function IssueDetailPage({ params }: Props) {
   const analysisResult = run ? toAnalysisResult(run) : null;
 
   return (
-    <PageShell width="medium">
+    <PageShell width="wide">
       <PageHeader
-        breadcrumb={
-          <>
-            <Link href="/issues" className={linkClass}>
-              이슈 목록
-            </Link>
-            {" / "}
-            <span className="font-mono text-xs">{issue.id}</span>
-          </>
-        }
+        breadcrumb={<><Link href="/issues" className={linkClass}>ISSUE QUEUE</Link>{" / "}<span>{issue.id.slice(0, 8)}</span></>}
         title={issue.title}
       />
 

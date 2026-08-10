@@ -2,411 +2,77 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import {
-  ANALYSIS_STATUS_LABEL,
-  RESULT_TYPE_LABEL,
-  formatDateTime,
-  getLatestRun,
-  getProjectName,
-  type AnalysisRun,
-  type Issue,
-  type ProjectConfig,
-} from "./mock-data";
-import {
-  AnalysisStatusBadge,
-  ResultBadge,
-} from "@/components/status-badges";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Search, SlidersHorizontal } from "lucide-react";
+import { ANALYSIS_STATUS_LABEL, RESULT_TYPE_LABEL, formatDateTime, getLatestRun, getProjectName, type AnalysisRun, type Issue, type ProjectConfig } from "./mock-data";
+import { AnalysisStatusBadge, ResultBadge } from "@/components/status-badges";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import {
-  emptyStateClass,
-  helpTextClass,
-  linkClass,
-  metricCardClass,
-  tableCellClass,
-  tableClass,
-  tableHeadCellClass,
-  tableHeadClass,
-  tableRowClass,
-  tableWrapClass,
-} from "@/components/ui/styles";
+import { PaperStrip } from "@/components/ui/workbench";
 
-const ALL = "__all__";
+const ALL = "ALL";
 
-type Props = {
-  issues: Issue[];
-  runs: AnalysisRun[];
-  projects: ProjectConfig[];
-};
+type Props = { issues: Issue[]; runs: AnalysisRun[]; projects: ProjectConfig[] };
 
-type MetricKey = "queued" | "running" | "review" | "needInfo" | "failed";
-
-function metricFor(run: AnalysisRun | undefined): MetricKey | null {
-  if (run?.status === "QUEUED") return "queued";
-  if (run?.status === "RUNNING") return "running";
-  if (run?.status === "FAILED") return "failed";
-  if (run?.resultType === "NEED_MORE_INFO") return "needInfo";
-  if (run?.resultType === "CODE_LIKELY") return "review";
-  return null;
+function shortDate(value?: string | null) {
+  if (!value) return "실행 없음";
+  return new Intl.DateTimeFormat("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
-
-// 지금 처리해야 할 이슈가 먼저 보이도록 정렬 — 등록 순서가 아니라 "당장 할 일이
-// 있는가"를 기준으로 한다. FAILED(분석 자체가 막힘)가 가장 급하고,
-// CODE_LIKELY/CHECK_EXTERNAL/NEED_MORE_INFO는 개발자가 검토할 게 있는 상태,
-// RUNNING/QUEUED는 아직 할 일이 없는 상태다.
-function urgencyRank(run: AnalysisRun | undefined): number {
-  if (!run) return 6;
-  if (run.status === "FAILED") return 0;
-  if (run.resultType === "CODE_LIKELY") return 1;
-  if (run.resultType === "CHECK_EXTERNAL") return 2;
-  if (run.resultType === "NEED_MORE_INFO") return 3;
-  if (run.status === "RUNNING") return 4;
-  if (run.status === "QUEUED") return 5;
-  return 6;
-}
-
-// 배지(status-badges.tsx)와 같은 상태를 가리키므로 라벨은 항상 그쪽 상수를 재사용한다 —
-// 별도 문자열을 두면 화면 안에서 같은 값이 두 가지 이름으로 불리는 문제가 생긴다.
-// 아래 필터 드롭다운이 "분석 상태"/"AI 판정" 두 그룹으로 나뉘어 있으므로,
-// 타일도 같은 필드끼리 붙여 놓고 그 사이만 구분선으로 나눈다(뒤섞지 않는다).
-type MetricTile = {
-  key: MetricKey;
-  label: string;
-  field: "analysisStatus" | "resultType";
-  value: string;
-  dot: string;
-};
-
-const STATUS_TILES: readonly MetricTile[] = [
-  {
-    key: "queued",
-    label: ANALYSIS_STATUS_LABEL.QUEUED,
-    field: "analysisStatus",
-    value: "QUEUED",
-    dot: "bg-zinc-400 dark:bg-zinc-500",
-  },
-  {
-    key: "running",
-    label: ANALYSIS_STATUS_LABEL.RUNNING,
-    field: "analysisStatus",
-    value: "RUNNING",
-    dot: "bg-sky-500",
-  },
-  {
-    key: "failed",
-    label: ANALYSIS_STATUS_LABEL.FAILED,
-    field: "analysisStatus",
-    value: "FAILED",
-    dot: "bg-red-500",
-  },
-];
-
-const RESULT_TILES: readonly MetricTile[] = [
-  {
-    key: "review",
-    label: RESULT_TYPE_LABEL.CODE_LIKELY,
-    field: "resultType",
-    value: "CODE_LIKELY",
-    dot: "bg-amber-500",
-  },
-  {
-    key: "needInfo",
-    label: RESULT_TYPE_LABEL.NEED_MORE_INFO,
-    field: "resultType",
-    value: "NEED_MORE_INFO",
-    dot: "bg-zinc-400 dark:bg-zinc-500",
-  },
-];
-
-const cardLinkClass =
-  "rounded-xl border border-border bg-card p-3.5 shadow-xs transition-colors hover:bg-muted/40 dark:shadow-none";
 
 export function IssueListTable({ issues, runs, projects }: Props) {
-  const [project, setProject] = useState("");
-  const [analysisStatus, setAnalysisStatus] = useState("");
-  const [resultType, setResultType] = useState("");
+  const [status, setStatus] = useState(ALL);
+  const [project, setProject] = useState(ALL);
+  const [result, setResult] = useState(ALL);
   const [query, setQuery] = useState("");
-  const projectKeys = projects.map((p) => p.key);
 
-  const metrics = useMemo(() => {
-    const counts: Record<MetricKey, number> = {
-      queued: 0,
-      running: 0,
-      review: 0,
-      needInfo: 0,
-      failed: 0,
-    };
-    for (const issue of issues) {
-      const key = metricFor(getLatestRun(runs, issue.id));
-      if (key) counts[key] += 1;
-    }
-    return counts;
-  }, [issues, runs]);
-
-  const filtered = useMemo(() => {
-    return issues
-      .filter((issue) => {
-        const run = getLatestRun(runs, issue.id);
-        if (project && issue.projectKey !== project) return false;
-        if (analysisStatus && run?.status !== analysisStatus) return false;
-        if (resultType && run?.resultType !== resultType) return false;
-        if (query.trim()) {
-          const q = query.trim().toLowerCase();
-          if (!issue.title.toLowerCase().includes(q)) return false;
-        }
-        return true;
-      })
-      .sort((a, b) => {
-        const rankDiff =
-          urgencyRank(getLatestRun(runs, a.id)) -
-          urgencyRank(getLatestRun(runs, b.id));
-        return rankDiff !== 0 ? rankDiff : b.createdAt.localeCompare(a.createdAt);
-      });
-  }, [issues, runs, project, analysisStatus, resultType, query]);
-
-  function toggleTile(field: "analysisStatus" | "resultType", value: string) {
-    if (field === "analysisStatus") {
-      setAnalysisStatus((prev) => (prev === value ? "" : value));
-    } else {
-      setResultType((prev) => (prev === value ? "" : value));
-    }
-  }
-
-  function renderTile(tile: MetricTile) {
-    const active =
-      tile.field === "analysisStatus"
-        ? analysisStatus === tile.value
-        : resultType === tile.value;
-    return (
-      <button
-        key={tile.key}
-        type="button"
-        aria-pressed={active}
-        onClick={() => toggleTile(tile.field, tile.value)}
-        className={cn(
-          metricCardClass,
-          "w-[calc(50%-0.375rem)] text-left transition-colors sm:w-auto sm:flex-1 hover:bg-muted/60",
-          active && "bg-muted ring-1 ring-ring/40 hover:bg-muted",
-        )}
-      >
-        <p className={`flex items-center gap-1.5 ${helpTextClass}`}>
-          <span className={`size-1.5 shrink-0 rounded-full ${tile.dot}`} />
-          {tile.label}
-        </p>
-        <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
-          {metrics[tile.key]}
-        </p>
-      </button>
-    );
-  }
+  const rows = useMemo(() => issues.map((issue) => ({ issue, run: getLatestRun(runs, issue.id) })), [issues, runs]);
+  const counts = useMemo(() => ({
+    ALL: rows.length,
+    QUEUED: rows.filter(({ run }) => run?.status === "QUEUED" || !run).length,
+    RUNNING: rows.filter(({ run }) => run?.status === "RUNNING").length,
+    SUCCEEDED: rows.filter(({ run }) => run?.status === "SUCCEEDED").length,
+    FAILED: rows.filter(({ run }) => run?.status === "FAILED").length,
+  }), [rows]);
+  const filtered = useMemo(() => rows.filter(({ issue, run }) => {
+    if (status !== ALL && (status === "QUEUED" ? run && run.status !== "QUEUED" : run?.status !== status)) return false;
+    if (project !== ALL && issue.projectKey !== project) return false;
+    if (result !== ALL && run?.resultType !== result) return false;
+    return issue.title.toLocaleLowerCase("ko").includes(query.trim().toLocaleLowerCase("ko"));
+  }), [rows, status, project, result, query]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap gap-3">
-        {STATUS_TILES.map(renderTile)}
-        <div
-          aria-hidden="true"
-          className="hidden w-px self-stretch bg-border sm:block"
-        />
-        {RESULT_TILES.map(renderTile)}
+    <section className="console-grid min-h-[520px] border border-console-line bg-console text-white" aria-label="이슈 운영 보드">
+      <div className="flex flex-wrap items-center gap-1 border-b border-console-line bg-console-muted p-2">
+        {(["ALL", "QUEUED", "RUNNING", "SUCCEEDED", "FAILED"] as const).map((key) => (
+          <button key={key} type="button" onClick={() => setStatus(key)} aria-pressed={status === key} className={status === key ? "min-h-11 border border-primary bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground sm:min-h-0" : "min-h-11 border border-console-line px-3 py-1.5 text-xs text-white/75 hover:text-white sm:min-h-0"}>
+            {key === "ALL" ? "전체" : ANALYSIS_STATUS_LABEL[key]} <span className="ml-1 text-xs opacity-60">{counts[key]}</span>
+          </button>
+        ))}
+        <div className="ml-auto flex items-center gap-1 text-xs font-medium text-white/70"><SlidersHorizontal className="size-3" /> 필터 제어</div>
       </div>
 
-      <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-        <Select
-          value={project || ALL}
-          onValueChange={(value) => setProject(value === ALL ? "" : value)}
-        >
-          <SelectTrigger
-            className="h-9 w-full sm:min-w-[10rem] sm:w-auto"
-            aria-label="프로젝트 필터"
-          >
-            <SelectValue placeholder="전체 프로젝트" />
-          </SelectTrigger>
-          <SelectContent position="popper">
-            <SelectItem value={ALL}>전체 프로젝트</SelectItem>
-            {projectKeys.map((key) => (
-              <SelectItem key={key} value={key}>
-                {getProjectName(projects, key)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={analysisStatus || ALL}
-          onValueChange={(value) =>
-            setAnalysisStatus(value === ALL ? "" : value)
-          }
-        >
-          <SelectTrigger
-            className="h-9 w-full sm:min-w-[10rem] sm:w-auto"
-            aria-label="분석 상태 필터"
-          >
-            <SelectValue placeholder="전체 분석 상태" />
-          </SelectTrigger>
-          <SelectContent position="popper">
-            <SelectItem value={ALL}>전체 분석 상태</SelectItem>
-            {Object.entries(ANALYSIS_STATUS_LABEL).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={resultType || ALL}
-          onValueChange={(value) => setResultType(value === ALL ? "" : value)}
-        >
-          <SelectTrigger
-            className="h-9 w-full sm:min-w-[10rem] sm:w-auto"
-            aria-label="AI 판정 필터"
-          >
-            <SelectValue placeholder="전체 AI 판정" />
-          </SelectTrigger>
-          <SelectContent position="popper">
-            <SelectItem value={ALL}>전체 AI 판정</SelectItem>
-            {Object.entries(RESULT_TYPE_LABEL).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="제목 검색"
-          aria-label="제목 검색"
-          className="h-9 w-full py-0 sm:min-w-[12rem] sm:flex-1"
-        />
+      <div className="grid gap-2 border-b border-console-line p-2 sm:grid-cols-[180px_180px_1fr]">
+        <Select value={project} onValueChange={setProject}><SelectTrigger aria-label="프로젝트 필터" className="h-8 border-console-line bg-console text-xs text-white"><SelectValue placeholder="전체 프로젝트" /></SelectTrigger><SelectContent><SelectItem value={ALL}>전체 프로젝트</SelectItem>{projects.map((p) => <SelectItem key={p.key} value={p.key}>{p.name}</SelectItem>)}</SelectContent></Select>
+        <Select value={result} onValueChange={setResult}><SelectTrigger aria-label="AI 판정 필터" className="h-8 border-console-line bg-console text-xs text-white"><SelectValue placeholder="전체 판정" /></SelectTrigger><SelectContent><SelectItem value={ALL}>전체 판정</SelectItem>{Object.entries(RESULT_TYPE_LABEL).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>
+        <div className="relative"><Search className="absolute left-2.5 top-2 size-3.5 text-white/60" /><Input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="제목 검색" placeholder="이슈 제목 검색" className="h-8 border-console-line bg-console pl-8 text-xs text-white placeholder:text-white/60" /></div>
       </div>
 
-      {/* 모바일(<md): 카드형 — 제목 + 분석 상태 + AI 판정을 항상 노출.
-          데스크톱(md+): 기존 7열 표, 가로 스크롤 없이 한 화면에 다 보임. */}
-      <div className="flex flex-col gap-2.5 md:hidden">
-        {filtered.map((issue) => {
-          const run = getLatestRun(runs, issue.id);
-          return (
-            <Link
-              key={issue.id}
-              href={`/issues/${issue.id}`}
-              className={`${cardLinkClass} flex flex-col gap-2`}
-            >
-              <p className="font-medium text-foreground">{issue.title}</p>
-              <div className="flex flex-wrap items-center gap-1.5">
-                {run ? <AnalysisStatusBadge status={run.status} /> : null}
-                {run?.resultType ? (
-                  <ResultBadge result={run.resultType} />
-                ) : null}
-              </div>
-              <p className={helpTextClass}>
-                {getProjectName(projects, issue.projectKey)} · {issue.source} ·{" "}
-                {formatDateTime(issue.createdAt)}
-              </p>
-            </Link>
-          );
-        })}
-        {filtered.length === 0 && (
-          <p className={emptyStateClass}>
-            {issues.length === 0
-              ? "아직 등록된 이슈가 없습니다. Asana 웹훅으로 이슈가 들어오면 여기에 표시됩니다."
-              : "조건에 맞는 이슈가 없습니다. 필터를 바꿔 보세요."}
-          </p>
-        )}
+      <div className="hidden grid-cols-[minmax(260px,1.6fr)_minmax(110px,.6fr)_110px_150px_130px] border-b border-console-line px-4 py-2 text-xs font-medium text-white/70 md:grid">
+        <span>이슈 스트립</span><span>프로젝트</span><span>상태</span><span>판정</span><span>최근 실행</span>
       </div>
 
-      <div className={`hidden md:block ${tableWrapClass}`}>
-        <table className={tableClass}>
-          <thead className={tableHeadClass}>
-            <tr>
-              <th className={tableHeadCellClass}>이슈 제목</th>
-              <th className={tableHeadCellClass}>프로젝트</th>
-              <th className={tableHeadCellClass}>원본</th>
-              <th className={tableHeadCellClass}>분석 상태</th>
-              <th className={tableHeadCellClass}>AI 판정</th>
-              <th className={tableHeadCellClass}>등록 시각</th>
-              <th className={tableHeadCellClass}>최근 분석 시각</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((issue) => {
-              const run = getLatestRun(runs, issue.id);
-              return (
-                <tr key={issue.id} className={tableRowClass}>
-                  <td className={tableCellClass}>
-                    <Link
-                      href={`/issues/${issue.id}`}
-                      className="font-medium text-foreground underline-offset-2 hover:underline"
-                    >
-                      {issue.title}
-                    </Link>
-                  </td>
-                  <td className={`${tableCellClass} text-foreground`}>
-                    {getProjectName(projects, issue.projectKey)}
-                  </td>
-                  <td className={tableCellClass}>
-                    {issue.externalUrl ? (
-                      <a
-                        href={issue.externalUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={linkClass}
-                      >
-                        {issue.source}
-                      </a>
-                    ) : (
-                      <span className="text-muted-foreground">
-                        {issue.source}
-                      </span>
-                    )}
-                  </td>
-                  <td className={tableCellClass}>
-                    {run ? (
-                      <AnalysisStatusBadge status={run.status} />
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className={tableCellClass}>
-                    {run?.resultType ? (
-                      <ResultBadge result={run.resultType} />
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className={`${tableCellClass} whitespace-nowrap text-muted-foreground`}>
-                    {formatDateTime(issue.createdAt)}
-                  </td>
-                  <td className={`${tableCellClass} whitespace-nowrap text-muted-foreground`}>
-                    {formatDateTime(run?.finishedAt ?? run?.startedAt)}
-                  </td>
-                </tr>
-              );
-            })}
-            {filtered.length === 0 && (
-              <tr>
-                <td
-                  colSpan={7}
-                  className={`${tableCellClass} ${emptyStateClass}`}
-                >
-                  {issues.length === 0
-                    ? "아직 등록된 이슈가 없습니다. Asana 웹훅으로 이슈가 들어오면 여기에 표시됩니다."
-                    : "조건에 맞는 이슈가 없습니다. 필터를 바꿔 보세요."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="space-y-px p-2 sm:p-3">
+        {filtered.length === 0 ? <div className="grid min-h-52 place-items-center px-4 text-center text-sm text-white/70">{issues.length === 0 ? "접수된 이슈가 없습니다. 접수 API로 첫 이슈를 연결하세요." : "조건에 맞는 이슈가 없습니다. 필터나 검색어를 바꿔보세요."}</div> : filtered.map(({ issue, run }, index) => (
+          <PaperStrip key={issue.id} asChild animated className="group grid gap-2 px-3 py-3 transition-colors hover:bg-strip-raised focus-visible:outline-2 focus-visible:outline-primary md:grid-cols-[minmax(260px,1.6fr)_minmax(110px,.6fr)_110px_150px_130px] md:items-center">
+          <Link href={`/issues/${issue.id}`} style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}>
+            <div className="min-w-0"><p className="line-clamp-2 text-sm font-semibold md:truncate">{issue.title}</p><p className="mt-1 text-xs text-black/65">{issue.source} · {issue.id.slice(0, 8)}</p></div>
+            <span className="text-xs text-black/70 before:mr-2 before:font-sans before:text-xs before:font-semibold before:text-black/60 before:content-['프로젝트'] md:before:hidden">{getProjectName(projects, issue.projectKey)}</span>
+            <span className="before:mr-2 before:font-sans before:text-xs before:font-semibold before:text-black/60 before:content-['상태'] md:before:hidden">{run ? <AnalysisStatusBadge status={run.status} /> : <span className="text-xs text-black/70">실행 없음</span>}</span>
+            <span className="before:mr-2 before:font-sans before:text-xs before:font-semibold before:text-black/60 before:content-['판정'] md:before:hidden">{run?.resultType ? <ResultBadge result={run.resultType} /> : <span className="text-xs text-black/70">판정 대기</span>}</span>
+            <span className="text-xs text-black/65 before:mr-2 before:font-semibold before:content-['최근_실행'] md:before:hidden" title={formatDateTime(run?.createdAt)}>{shortDate(run?.createdAt)}</span>
+          </Link>
+          </PaperStrip>
+        ))}
       </div>
-    </div>
+    </section>
   );
 }

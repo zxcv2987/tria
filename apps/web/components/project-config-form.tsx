@@ -27,6 +27,7 @@ import {
   tableRowClass,
   tableWrapClass,
 } from "@/components/ui/styles";
+import { ConsoleSectionHeader, MetaRow, PaperStrip } from "@/components/ui/workbench";
 
 const REPO_NONE = "__none__";
 
@@ -52,14 +53,19 @@ export function ProjectConfigForm({ initialProjects }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [repoOptions, setRepoOptions] = useState<RepoOption[]>([]);
+  const [repoState, setRepoState] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
     fetch("/api/github/available-repos")
       .then((res) => res.json())
-      .then((data: { repositories?: RepoOption[] }) =>
-        setRepoOptions(data.repositories ?? []),
-      )
-      .catch(() => setRepoOptions([]));
+      .then((data: { repositories?: RepoOption[] }) => {
+        setRepoOptions(data.repositories ?? []);
+        setRepoState("ready");
+      })
+      .catch(() => {
+        setRepoOptions([]);
+        setRepoState("error");
+      });
   }, []);
 
   function handleRepoSelect(value: string) {
@@ -139,10 +145,25 @@ export function ProjectConfigForm({ initialProjects }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_420px]">
       {dialog}
-      <div className={tableWrapClass}>
+      <div className="space-y-2 md:hidden">
+        <ConsoleSectionHeader className="border border-console-line bg-console-muted p-3" title="저장소 매핑 스트립" description="접수 키와 조사 저장소를 관리합니다." />
+        {projects.length === 0 ? <p className="border border-dashed border-border p-6 text-center text-sm text-muted-foreground">등록된 프로젝트가 없습니다.</p> : projects.map((p) => (
+          <PaperStrip asChild key={p.id} className="p-4"><article>
+            <div className="flex items-center justify-between gap-3"><code className="text-xs font-semibold">{p.key}</code><ActiveBadge active={p.isActive} /></div>
+            <h3 className="mt-3 text-sm font-semibold">{p.name}</h3>
+            <dl className="mt-2 space-y-1 text-xs"><MetaRow label="저장소" valueClassName="truncate">{p.githubOwner}/{p.githubRepository}</MetaRow><MetaRow label="기본 브랜치">{p.defaultRef}</MetaRow></dl>
+            <div className="mt-4 grid grid-cols-2 gap-2"><Button className="h-11" type="button" variant="outline" onClick={() => startEdit(p)}>수정</Button><Button className="h-11" type="button" variant="destructive" onClick={() => handleDelete(p.id)}>삭제</Button></div>
+          </article></PaperStrip>
+        ))}
+      </div>
+      <div className={`${tableWrapClass} hidden min-h-[420px] min-w-0 md:block`}>
         <table className={`${tableClass} min-w-[48rem]`}>
+          <caption className="border-b border-console-line bg-console-muted px-3 py-3 text-left">
+            <span className="block text-sm font-semibold text-white">저장소 매핑 스트립</span>
+            <span className="mt-1 block text-xs text-white/70">접수 키가 어떤 저장소와 기준 브랜치를 조사할지 정의합니다.</span>
+          </caption>
           <thead className={tableHeadClass}>
             <tr>
               <th className={tableHeadCellClass}>키</th>
@@ -166,11 +187,11 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             ) : (
               projects.map((p) => (
                 <tr key={p.id} className={tableRowClass}>
-                  <td className={`${tableCellClass} whitespace-nowrap font-mono text-xs`}>
+                  <td className={`${tableCellClass} whitespace-nowrap text-xs`}>
                     {p.key}
                   </td>
                   <td className={`${tableCellClass} whitespace-nowrap`}>{p.name}</td>
-                  <td className={`${tableCellClass} whitespace-nowrap font-mono text-xs`}>
+                  <td className={`${tableCellClass} whitespace-nowrap text-xs`}>
                     {p.githubOwner}/{p.githubRepository}
                   </td>
                   <td className={`${tableCellClass} whitespace-nowrap`}>
@@ -208,7 +229,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
 
       <form
         onSubmit={handleSubmit}
-        className={`${cardClass} flex max-w-xl flex-col gap-4`}
+        className={`${cardClass} flex flex-col gap-4 lg:sticky lg:top-16`}
       >
         <div className="flex items-center justify-between gap-2">
           <h2 className={sectionTitleClass}>
@@ -223,7 +244,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
 
         <p className="text-xs text-muted-foreground">
           여기 등록해도 자동으로 이벤트가 오지 않습니다. 이 키를
-          `projectKey`로 지정해 <code>POST /api/issues</code>를 직접
+          <code>projectKey</code>로 지정해 <code>POST /api/issues</code>를 직접
           호출해야 실제로 연결됩니다.
         </p>
 
@@ -253,7 +274,9 @@ export function ProjectConfigForm({ initialProjects }: Props) {
           <label htmlFor="githubRepo" className={fieldLabelClass}>
             GitHub 저장소
           </label>
-          {repoOptions.length > 0 ? (
+          {repoState === "loading" ? (
+            <p className={helpTextClass} role="status">설치된 저장소 목록을 불러오는 중입니다.</p>
+          ) : repoOptions.length > 0 ? (
             <Select
               value={
                 form.githubOwner && form.githubRepository
@@ -292,7 +315,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
           ) : (
             <>
               <p className={helpTextClass}>
-                설치된 저장소 목록을 못 불러와서 직접 입력으로 대체합니다.
+                {repoState === "error" ? "저장소 목록을 불러오지 못했습니다. 직접 입력하세요." : "설치된 저장소가 없습니다. 저장소를 직접 입력하세요."}
               </p>
               <div className="flex gap-2">
                 <Input

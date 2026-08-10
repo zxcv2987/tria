@@ -1,0 +1,10 @@
+{
+  "approved": true,
+  "direction": "Flight Progress Strip Desk",
+  "composition": "C의 3열 조사 구조와 A의 판정·증거 위계 결합",
+  "mustNotLiteralize": [
+    "현재 데이터에 없는 우선순위, 담당자, 신뢰도, 진행률",
+    "실제 코드 본문 뷰어",
+    "항공기, 레이더 등 장식적 항공 메타포"
+  ]
+}

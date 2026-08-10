@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-10T15:02:38+09:00",
+  "title": "Design System: Tria",
+  "extensions": {
+    "colorMeta": {
+      "warm-field": { "role": "neutral", "displayName": "Warm Field", "canonical": "oklch(0.955 0.012 84)", "tonalRamp": ["oklch(0.15 0.012 84)", "oklch(0.27 0.012 84)", "oklch(0.39 0.012 84)", "oklch(0.51 0.012 84)", "oklch(0.63 0.012 84)", "oklch(0.75 0.012 84)", "oklch(0.87 0.012 84)", "oklch(0.955 0.012 84)"] },
+      "warm-paper": { "role": "neutral", "displayName": "Warm Paper", "canonical": "oklch(0.93 0.025 85)", "tonalRamp": ["oklch(0.15 0.025 85)", "oklch(0.27 0.025 85)", "oklch(0.39 0.025 85)", "oklch(0.51 0.025 85)", "oklch(0.63 0.025 85)", "oklch(0.75 0.025 85)", "oklch(0.87 0.025 85)", "oklch(0.95 0.025 85)"] },
+      "raised-paper": { "role": "neutral", "displayName": "Raised Paper", "canonical": "oklch(0.975 0.018 85)", "tonalRamp": ["oklch(0.15 0.018 85)", "oklch(0.27 0.018 85)", "oklch(0.39 0.018 85)", "oklch(0.51 0.018 85)", "oklch(0.63 0.018 85)", "oklch(0.75 0.018 85)", "oklch(0.87 0.018 85)", "oklch(0.975 0.018 85)"] },
+      "charcoal-ink": { "role": "neutral", "displayName": "Charcoal Ink", "canonical": "oklch(0.205 0.018 158)", "tonalRamp": ["oklch(0.15 0.018 158)", "oklch(0.27 0.018 158)", "oklch(0.39 0.018 158)", "oklch(0.51 0.018 158)", "oklch(0.63 0.018 158)", "oklch(0.75 0.018 158)", "oklch(0.87 0.018 158)", "oklch(0.95 0.018 158)"] },
+      "charcoal-console": { "role": "neutral", "displayName": "Charcoal Console", "canonical": "oklch(0.19 0.024 158)", "tonalRamp": ["oklch(0.12 0.024 158)", "oklch(0.19 0.024 158)", "oklch(0.30 0.024 158)", "oklch(0.42 0.024 158)", "oklch(0.54 0.024 158)", "oklch(0.66 0.024 158)", "oklch(0.78 0.024 158)", "oklch(0.90 0.024 158)"] },
+      "charcoal-console-muted": { "role": "neutral", "displayName": "Muted Console", "canonical": "oklch(0.25 0.028 158)", "tonalRamp": ["oklch(0.15 0.028 158)", "oklch(0.25 0.028 158)", "oklch(0.37 0.028 158)", "oklch(0.49 0.028 158)", "oklch(0.61 0.028 158)", "oklch(0.73 0.028 158)", "oklch(0.85 0.028 158)", "oklch(0.95 0.028 158)"] },
+      "console-line": { "role": "neutral", "displayName": "Console Line", "canonical": "oklch(0.42 0.036 158)", "tonalRamp": ["oklch(0.15 0.036 158)", "oklch(0.27 0.036 158)", "oklch(0.39 0.036 158)", "oklch(0.51 0.036 158)", "oklch(0.63 0.036 158)", "oklch(0.75 0.036 158)", "oklch(0.87 0.036 158)", "oklch(0.95 0.036 158)"] },
+      "operational-teal": { "role": "primary", "displayName": "Operational Teal", "canonical": "oklch(0.42 0.075 178)", "tonalRamp": ["oklch(0.15 0.075 178)", "oklch(0.27 0.075 178)", "oklch(0.39 0.075 178)", "oklch(0.51 0.075 178)", "oklch(0.63 0.075 178)", "oklch(0.75 0.075 178)", "oklch(0.87 0.075 178)", "oklch(0.95 0.075 178)"] },
+      "amber-signal": { "role": "secondary", "displayName": "Amber Signal", "canonical": "oklch(0.7 0.135 65)", "tonalRamp": ["oklch(0.15 0.135 65)", "oklch(0.27 0.135 65)", "oklch(0.39 0.135 65)", "oklch(0.51 0.135 65)", "oklch(0.63 0.135 65)", "oklch(0.75 0.135 65)", "oklch(0.87 0.135 65)", "oklch(0.95 0.135 65)"] },
+      "muted-ink": { "role": "neutral", "displayName": "Muted Ink", "canonical": "oklch(0.47 0.02 158)", "tonalRamp": ["oklch(0.15 0.02 158)", "oklch(0.27 0.02 158)", "oklch(0.39 0.02 158)", "oklch(0.51 0.02 158)", "oklch(0.63 0.02 158)", "oklch(0.75 0.02 158)", "oklch(0.87 0.02 158)", "oklch(0.95 0.02 158)"] },
+      "structural-border": { "role": "neutral", "displayName": "Structural Border", "canonical": "oklch(0.76 0.018 84)", "tonalRamp": ["oklch(0.15 0.018 84)", "oklch(0.27 0.018 84)", "oklch(0.39 0.018 84)", "oklch(0.51 0.018 84)", "oklch(0.63 0.018 84)", "oklch(0.75 0.018 84)", "oklch(0.87 0.018 84)", "oklch(0.95 0.018 84)"] },
+      "destructive": { "role": "tertiary", "displayName": "Destructive Red", "canonical": "oklch(0.56 0.18 28)", "tonalRamp": ["oklch(0.15 0.18 28)", "oklch(0.27 0.18 28)", "oklch(0.39 0.18 28)", "oklch(0.51 0.18 28)", "oklch(0.63 0.18 28)", "oklch(0.75 0.18 28)", "oklch(0.87 0.18 28)", "oklch(0.95 0.18 28)"] }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Case Headline", "purpose": "페이지와 사건 제목." },
+      "body": { "displayName": "Operational Body", "purpose": "한글 이슈와 분석 설명." },
+      "label": { "displayName": "Interface Label", "purpose": "Pretendard로 표시하는 상태, 필터와 한글 메타데이터." },
+      "identifier": { "displayName": "Technical Identifier", "purpose": "Pretendard로 표시하는 경로, ID, SHA와 저장소 기준." }
+    },
+    "shadows": [
+      { "name": "floating-overlay", "value": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)", "purpose": "팝오버처럼 실제로 떠 있는 일시적 레이어에만 사용." }
+    ],
+    "motion": [
+      { "name": "strip-enter", "value": "360ms cubic-bezier(.16,1,.3,1)", "purpose": "감소 모션 설정이 없을 때 종이 스트립을 왼쪽에서 펼침." },
+      { "name": "state-color", "value": "150ms ease", "purpose": "버튼, 필터와 입력의 짧은 색상 상태 전환." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "재분석처럼 직접적인 다음 행동.",
+      "html": "<button class=\"ds-btn-primary\">재분석</button>",
+      "css": ".ds-btn-primary { height:32px; padding:0 10px; border:1px solid transparent; border-radius:2px; background:var(--primary); color:var(--primary-foreground); font:500 14px var(--font-sans); transition:background-color 150ms ease; } .ds-btn-primary:hover { background:color-mix(in oklch,var(--primary),transparent 20%); } .ds-btn-primary:focus-visible { outline:none; border-color:var(--ring); box-shadow:0 0 0 2px color-mix(in oklch,var(--ring),transparent 40%); } .ds-btn-primary:active { background:color-mix(in oklch,var(--primary),black 8%); }"
+    },
+    {
+      "name": "Console Outline Action",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "결과 복사와 실행 로그 같은 보조 행동.",
+      "html": "<button class=\"ds-btn-outline\">결과 복사</button>",
+      "css": ".ds-btn-outline { height:32px; padding:0 10px; border:1px solid var(--console-line); border-radius:2px; background:transparent; color:white; font:500 14px var(--font-sans); transition:background-color 150ms ease; } .ds-btn-outline:hover { background:rgb(255 255 255 / .08); } .ds-btn-outline:focus-visible { outline:none; border-color:var(--ring); box-shadow:0 0 0 2px color-mix(in oklch,var(--ring),transparent 40%); } .ds-btn-outline:active { background:rgb(255 255 255 / .12); }"
+    },
+    {
+      "name": "Console Search Field",
+      "kind": "input",
+      "refersTo": "input-console",
+      "description": "운영 보드 안의 검색과 필터 입력.",
+      "html": "<input class=\"ds-input-console\" aria-label=\"이슈 제목 검색\" placeholder=\"이슈 제목 검색\" />",
+      "css": ".ds-input-console { width:100%; height:32px; padding:8px 12px; border:1px solid var(--console-line); border-radius:2px; background:var(--console); color:white; font:400 12px var(--font-sans); transition:border-color 150ms ease,box-shadow 150ms ease; } .ds-input-console::placeholder { color:rgb(255 255 255 / .6); } .ds-input-console:hover { border-color:color-mix(in oklch,var(--console-line),white 12%); } .ds-input-console:focus-visible { outline:none; border-color:var(--ring); box-shadow:0 0 0 3px color-mix(in oklch,var(--ring),transparent 50%); }"
+    },
+    {
+      "name": "Issue Strip",
+      "kind": "card",
+      "refersTo": "issue-strip",
+      "description": "큐에서 사건의 상태와 다음 조사 대상을 운반하는 종이 스트립.",
+      "html": "<article class=\"ds-issue-strip\"><div><strong>결제 완료 후 주문 상태가 갱신되지 않음</strong><small>ASANA · 4F8A2C10</small></div><span>분석 완료</span></article>",
+      "css": ".ds-issue-strip { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; padding:12px; clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%); background:var(--strip); color:oklch(0.22 0.018 158); font:400 13px var(--font-sans); transition:background-color 150ms ease; } .ds-issue-strip strong { display:block; font-weight:500; } .ds-issue-strip small { display:block; margin-top:4px; font:400 10px var(--font-mono); color:rgb(0 0 0 / .65); letter-spacing:.04em; } .ds-issue-strip:hover { background:var(--strip-raised); } .ds-issue-strip:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }"
+    },
+    {
+      "name": "Evidence Strip",
+      "kind": "custom",
+      "refersTo": "issue-strip",
+      "description": "검증된 저장소 경로와 근거 이유를 순서대로 표시.",
+      "html": "<article class=\"ds-evidence-strip\"><span class=\"ds-evidence-index\">1</span><div><code>app/api/orders/route.ts · POST</code><p>결제 콜백 이후 상태 저장 경로를 확인합니다.</p></div></article>",
+      "css": ".ds-evidence-strip { display:grid; grid-template-columns:34px minmax(0,1fr); gap:12px; padding:12px; clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%); background:var(--strip); color:oklch(0.22 0.018 158); } .ds-evidence-index { display:grid; width:28px; height:28px; place-items:center; background:var(--primary); color:var(--primary-foreground); font:400 12px var(--font-mono); } .ds-evidence-strip code { font:500 12px var(--font-mono); } .ds-evidence-strip p { margin:8px 0 0; color:rgb(0 0 0 / .6); font:400 12px/1.55 var(--font-sans); } .ds-evidence-strip:hover { background:var(--strip-raised); }"
+    },
+    {
+      "name": "Console Navigation",
+      "kind": "nav",
+      "description": "작업대의 고정 상단 운영 내비게이션.",
+      "html": "<nav class=\"ds-console-nav\"><strong><span>T</span> TRIA</strong><a class=\"ds-active\" href=\"#\">이슈 큐</a><a href=\"#\">프로젝트</a></nav>",
+      "css": ".ds-console-nav { display:flex; height:48px; align-items:center; gap:0; border-bottom:1px solid var(--console-line); background:var(--console); color:white; font:400 14px var(--font-sans); } .ds-console-nav strong { display:flex; align-items:center; gap:8px; margin-right:24px; color:var(--strip); font:600 14px var(--font-mono); letter-spacing:.12em; } .ds-console-nav strong span { display:grid; width:24px; height:24px; place-items:center; border:1px solid var(--primary); background:color-mix(in oklch,var(--primary),transparent 85%); color:var(--primary); font-size:11px; } .ds-console-nav a { display:flex; height:100%; align-items:center; padding:0 12px; border-bottom:2px solid transparent; color:rgb(255 255 255 / .6); text-decoration:none; } .ds-console-nav a:hover { color:white; } .ds-console-nav a:focus-visible { outline:2px solid var(--ring); outline-offset:-2px; } .ds-console-nav a.ds-active { border-bottom-color:var(--primary); color:white; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Flight Progress Strip Desk",
+    "overview": "Tria는 AI 대시보드가 아니라 개발자의 조사 작업대다. 증거가 운영 스트립을 따라 이동한다는 관점으로, 숯빛 콘솔 위에 따뜻한 종이 스트립을 쌓아 이슈 큐와 저장소 근거의 순서를 드러낸다. 화면의 주된 이야기는 큐를 훑고, 사건을 열고, 검증된 저장소 근거를 확인하고, 다음 행동을 고르는 것이다.\n\n밀도는 높지만 역할은 조용히 분리한다. 콘솔은 구조와 제어를 맡고, 종이 스트립은 사람이 읽고 판단할 정보를 운반한다. 틸은 조작 가능한 상태와 순서 표식에, 앰버는 주의를 부르는 신호에만 나타난다. 잘린 우상단 모서리와 세로 그리드는 이 세계의 반복 가능한 서명이다.",
+    "keyCharacteristics": [
+      "숯빛 운영 콘솔과 따뜻한 종이 스트립의 강한 재료 대비",
+      "이슈 큐와 근거를 같은 스트립 문법으로 연결하는 증거 흐름",
+      "틸 제어, 앰버 신호, 얇은 구조선으로 제한된 기능색",
+      "거의 평평한 표면, 작은 반경, 잘린 우상단 모서리",
+      "제목·본문·라벨·기술 식별자까지 Pretendard 하나로 통일한 안정적인 한글 조판"
+    ],
+    "rules": [
+      { "name": "The Material Assignment Rule", "body": "콘솔은 제어와 구조, 종이는 이슈와 증거를 담는다. 두 재료의 역할을 뒤집지 않는다.", "section": "colors" },
+      { "name": "The Two-Signal Rule", "body": "틸은 조작과 진행, 앰버는 주의 신호다. 같은 상태에 두 색을 함께 쓰지 않는다.", "section": "colors" },
+      { "name": "The Single-Typeface Rule", "body": "모든 UI 카피와 기술 식별자에 Pretendard를 쓴다. 모노스페이스 서체를 사용하지 않는다.", "section": "typography" },
+      { "name": "The Bench-Stays-Flat Rule", "body": "지속되는 작업 표면은 뜨지 않는다. 콘솔 선과 종이 대비만으로 계층을 만든다.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do 이슈와 검증된 근거를 Warm Paper 스트립에 담아 증거 흐름을 유지한다.",
+      "Do 제어, 필터, 실행 메타데이터는 Charcoal Console 계열 표면에 둔다.",
+      "Do 틸은 조작 가능한 요소와 포커스, 앰버는 주의 신호에만 사용한다.",
+      "Do 모바일에서 표를 억지로 축소하지 말고 각 스트립을 라벨형 스택으로 전환한다.",
+      "Do 긴 한글 설명은 Pretendard와 여유 있는 행간으로, 경로와 식별자는 Geist Mono로 표시한다."
+    ],
+    "donts": [
+      "Don't 둥근 흰 카드, 큰 차트, 그라디언트 영웅 영역을 조합한 일반적인 AI 대시보드로 되돌리지 않는다.",
+      "Don't 지속되는 작업 표면에 그림자를 추가하지 않는다.",
+      "Don't 종이 스트립을 제어막대로, 숯빛 콘솔을 긴 판정 본문으로 사용하지 않는다.",
+      "Don't 틸과 앰버를 장식용으로 넓게 채우거나 서로의 의미를 바꾸지 않는다.",
+      "Don't 스트립의 잘린 모서리를 임의의 큰 radius로 부드럽게 만들지 않는다."
+    ]
+  }
+}
