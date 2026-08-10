@@ -62,26 +62,42 @@ export async function listAccessibleRepositories(): Promise<RepoRef[]> {
         headers: { ...GITHUB_HEADERS, Authorization: `Bearer ${jwt}` },
       }
     );
-    if (!tokenRes.ok) continue;
+    // 목록이 불완전하면 project-sync가 여전히 설치된 저장소를 "해제됨"으로
+    // 오판해 비활성화할 수 있다 — 그냥 건너뛰지 않고 실패를 드러낸다.
+    if (!tokenRes.ok) {
+      throw new Error(
+        `installation ${installation.id} 토큰 발급 실패 (${tokenRes.status})`
+      );
+    }
     const { token } = (await tokenRes.json()) as { token: string };
 
-    const reposRes = await fetch(`${GITHUB_API}/installation/repositories`, {
-      headers: { ...GITHUB_HEADERS, Authorization: `Bearer ${token}` },
-    });
-    if (!reposRes.ok) continue;
-    const data = (await reposRes.json()) as {
-      repositories: {
-        name: string;
-        owner: { login: string };
-        default_branch: string;
-      }[];
-    };
-    for (const r of data.repositories) {
-      repos.push({
-        owner: r.owner.login,
-        repo: r.name,
-        defaultBranch: r.default_branch,
-      });
+    // GitHub 기본 페이지 크기(30)로는 저장소가 많은 installation의 뒷부분이
+    // 잘려서 같은 이유로 오판된 비활성화를 유발한다 — 끝까지 페이지네이션한다.
+    for (let page = 1; ; page++) {
+      const reposRes = await fetch(
+        `${GITHUB_API}/installation/repositories?per_page=100&page=${page}`,
+        { headers: { ...GITHUB_HEADERS, Authorization: `Bearer ${token}` } }
+      );
+      if (!reposRes.ok) {
+        throw new Error(
+          `installation ${installation.id} 저장소 목록 조회 실패 (${reposRes.status})`
+        );
+      }
+      const data = (await reposRes.json()) as {
+        repositories: {
+          name: string;
+          owner: { login: string };
+          default_branch: string;
+        }[];
+      };
+      for (const r of data.repositories) {
+        repos.push({
+          owner: r.owner.login,
+          repo: r.name,
+          defaultBranch: r.default_branch,
+        });
+      }
+      if (data.repositories.length < 100) break;
     }
   }
 

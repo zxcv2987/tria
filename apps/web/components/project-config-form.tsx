@@ -40,6 +40,7 @@ type SyncResponse = {
     githubRepository: string;
     conflictingKey: string;
   }[];
+  errors: { githubOwner: string; githubRepository: string; message: string }[];
 };
 
 type Props = {
@@ -180,8 +181,14 @@ export function ProjectConfigForm({ initialProjects }: Props) {
           .join(", ");
         message += `\n${data.conflicts.length}개 충돌(수동 처리 필요): ${conflictSummary}`;
       }
+      if (data.errors.length > 0) {
+        const errorSummary = data.errors
+          .map((e) => `${e.githubOwner}/${e.githubRepository} (${e.message})`)
+          .join(", ");
+        message += `\n${data.errors.length}개 추가 실패: ${errorSummary}`;
+      }
       await alert(message, {
-        variant: data.conflicts.length > 0 ? "error" : undefined,
+        variant: data.conflicts.length > 0 || data.errors.length > 0 ? "error" : undefined,
       });
     } catch (err) {
       await alert(

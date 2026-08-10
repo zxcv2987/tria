@@ -44,6 +44,7 @@ export async function POST() {
     const plan = planProjectSync(repositories, existingProjects);
     const inserted: (NewProject & { id: string })[] = [];
     const conflicts: Conflict[] = [...plan.conflicts];
+    const errors: { githubOwner: string; githubRepository: string; message: string }[] = [];
 
     for (const project of plan.toInsert) {
       const { data: insertedRow, error: insertError } = await db
@@ -67,13 +68,15 @@ export async function POST() {
         });
         continue;
       }
+      // 한 건 실패로 나머지 신규 저장소 추가와 비활성화 반영까지 통째로
+      // 무산시키지 않는다 — 이 항목만 실패로 보고하고 계속 진행한다.
       if (insertError || !insertedRow) {
-        return Response.json(
-          {
-            error: `프로젝트 생성 실패: ${insertError?.message ?? "unknown"}`,
-          },
-          { status: 500 },
-        );
+        errors.push({
+          githubOwner: project.githubOwner,
+          githubRepository: project.githubRepository,
+          message: insertError?.message ?? "unknown",
+        });
+        continue;
       }
       inserted.push({ id: (insertedRow as { id: string }).id, ...project });
     }
@@ -96,6 +99,7 @@ export async function POST() {
       inserted,
       deactivatedIds: plan.toDeactivateIds,
       conflicts,
+      errors,
     });
   } catch (error) {
     return Response.json(

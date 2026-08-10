@@ -57,6 +57,8 @@ export function planProjectSync(
   const conflicts: Conflict[] = [];
 
   for (const r of remoteRepos) {
+    // 활성/비활성 상관없이 손대지 않는다 — false는 사람이 의도적으로 껐을 수
+    // 있어서, 재설치돼도 여기서 자동으로 다시 켜지 않는다 (문서 7.5.1절).
     if (existingByRepo.has(repoId(r.owner, r.repo))) continue;
 
     if (existingKeys.has(r.repo)) {
