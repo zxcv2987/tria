@@ -105,7 +105,10 @@ async function main(): Promise<void> {
   try {
     const provider = selectProvider();
     const prompt = await buildPrompt(ISSUE_TITLE, ISSUE_BODY);
-    const parsed = await provider.run(prompt, TARGET_REPOSITORY_PATH);
+    const { result: parsed, usage } = await provider.run(
+      prompt,
+      TARGET_REPOSITORY_PATH
+    );
 
     if (!isAnalysisResult(parsed)) {
       throw new Error("분석 결과가 AnalysisResult 형태와 일치하지 않습니다.");
@@ -116,6 +119,7 @@ async function main(): Promise<void> {
       analysisRunId: ANALYSIS_RUN_ID,
       status: "SUCCEEDED",
       result,
+      usage,
     };
   } catch (err) {
     // execFile 에러 message는 인자(프롬프트) 전체를 포함하므로 stderr를 우선한다.

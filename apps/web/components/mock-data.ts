@@ -1,6 +1,7 @@
 import type {
   AnalysisEvidence,
   AnalysisResult,
+  TokenUsage,
 } from "@tria/analysis";
 
 // 문서 12장 형태 — UI mock 전용
@@ -38,6 +39,7 @@ export type AnalysisRun = {
   limitations: string[];
   workflowRunUrl: string | null;
   failureReason: string | null;
+  tokenUsage: TokenUsage | null;
   startedAt: string | null;
   finishedAt: string | null;
   createdAt: string;
@@ -178,6 +180,12 @@ export const MOCK_ANALYSIS_RUNS: AnalysisRun[] = [
     ],
     workflowRunUrl: "https://github.com/tria-org/classroom-web/actions/runs/101",
     failureReason: null,
+    tokenUsage: {
+      inputTokens: 12400,
+      outputTokens: 1800,
+      totalTokens: 14200,
+      model: "gemini-2.0-flash",
+    },
     startedAt: "2026-07-20T09:30:00+09:00",
     finishedAt: "2026-07-20T09:42:00+09:00",
     createdAt: "2026-07-20T09:28:00+09:00",
@@ -198,6 +206,7 @@ export const MOCK_ANALYSIS_RUNS: AnalysisRun[] = [
     limitations: [],
     workflowRunUrl: "https://github.com/tria-org/billing-api/actions/runs/202",
     failureReason: null,
+    tokenUsage: null,
     startedAt: "2026-07-21T14:05:00+09:00",
     finishedAt: null,
     createdAt: "2026-07-21T14:04:00+09:00",
@@ -223,6 +232,12 @@ export const MOCK_ANALYSIS_RUNS: AnalysisRun[] = [
     limitations: ["이슈 본문만으로는 화면/기능을 특정할 수 없습니다."],
     workflowRunUrl: "https://github.com/tria-org/admin-console/actions/runs/303",
     failureReason: null,
+    tokenUsage: {
+      inputTokens: 8200,
+      outputTokens: 900,
+      totalTokens: 9100,
+      model: "gemini-2.0-flash",
+    },
     startedAt: "2026-07-22T09:05:00+09:00",
     finishedAt: "2026-07-22T09:12:00+09:00",
     createdAt: "2026-07-22T09:04:00+09:00",

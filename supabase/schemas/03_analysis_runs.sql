@@ -21,6 +21,8 @@ create table public.analysis_runs (
   workflow_run_url text,
   failure_reason text,
   notify_url text,
+  -- TokenUsage JSON: { inputTokens, outputTokens, totalTokens, cachedTokens?, model? }
+  token_usage jsonb,
   started_at timestamptz,
   finished_at timestamptz,
   created_at timestamptz not null default now()

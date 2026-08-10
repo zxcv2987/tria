@@ -138,6 +138,7 @@ export async function POST(request: Request) {
         missing_information: result.missingInformation,
         limitations: result.limitations,
         target_commit_sha: payload.targetCommitSha ?? null,
+        token_usage: payload.usage ?? null,
         finished_at: finishedAt,
         failure_reason: null,
       })

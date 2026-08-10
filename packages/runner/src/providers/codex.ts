@@ -48,7 +48,7 @@ const OUTPUT_SCHEMA = {
 
 /** OpenAI Codex CLI. ChatGPT 로그인 세션 또는 `codex login --with-api-key`(OPENAI_API_KEY) 인증 필요. */
 export const codexProvider: AnalysisProvider = {
-  async run(prompt: string, repositoryPath: string): Promise<unknown> {
+  async run(prompt: string, repositoryPath: string) {
     const workDir = await fs.mkdtemp(path.join(os.tmpdir(), "tria-codex-"));
     const schemaPath = path.join(workDir, "schema.json");
     const outputPath = path.join(workDir, "output.json");
@@ -78,7 +78,9 @@ export const codexProvider: AnalysisProvider = {
       await run;
 
       const raw = await fs.readFile(outputPath, "utf-8");
-      return JSON.parse(raw);
+      // ponytail: codex -o는 분석 JSON만 쓰고 usage 이벤트를 안 남김. --json JSONL
+      // 파싱은 필요할 때 추가.
+      return { result: JSON.parse(raw), usage: null };
     } finally {
       await fs.rm(workDir, { recursive: true, force: true });
     }

@@ -279,6 +279,25 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
               }`}
             />
 
+            <Field
+              label="토큰 사용량"
+              value={
+                run.tokenUsage
+                  ? [
+                      `입력 ${run.tokenUsage.inputTokens.toLocaleString("ko-KR")}`,
+                      `출력 ${run.tokenUsage.outputTokens.toLocaleString("ko-KR")}`,
+                      `합계 ${run.tokenUsage.totalTokens.toLocaleString("ko-KR")}`,
+                      run.tokenUsage.cachedTokens
+                        ? `캐시 ${run.tokenUsage.cachedTokens.toLocaleString("ko-KR")}`
+                        : null,
+                      run.tokenUsage.model ? `모델 ${run.tokenUsage.model}` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")
+                  : null
+              }
+            />
+
             <div className="flex flex-col gap-1.5">
               <h3 className={metaLabelClass}>GitHub Actions 실행 링크</h3>
               {run.workflowRunUrl ? (

@@ -41,6 +41,7 @@ type AnalysisRunRow = {
   limitations: string[] | null;
   workflow_run_url: string | null;
   failure_reason: string | null;
+  token_usage: AnalysisRun["tokenUsage"] | null;
   started_at: string | null;
   finished_at: string | null;
   created_at: string;
@@ -94,6 +95,7 @@ function mapRun(row: AnalysisRunRow): AnalysisRun {
     limitations: row.limitations ?? [],
     workflowRunUrl: row.workflow_run_url,
     failureReason: row.failure_reason,
+    tokenUsage: row.token_usage ?? null,
     startedAt: row.started_at,
     finishedAt: row.finished_at,
     createdAt: row.created_at,

@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import assert from "node:assert";
+import type { TokenUsage } from "@tria/analysis";
 import type { AnalysisProvider } from "./types";
 
 const execFileAsync = promisify(execFile);
@@ -19,6 +20,42 @@ function extractJson(text: string): unknown {
   return JSON.parse(candidate.slice(start, end + 1));
 }
 
+/** Gemini CLI `--output-format json`의 stats.models[*].tokens를 TokenUsage로 합산. */
+export function usageFromGeminiStats(stats: unknown): TokenUsage | null {
+  if (typeof stats !== "object" || stats === null) return null;
+  const models = (stats as { models?: Record<string, unknown> }).models;
+  if (!models || typeof models !== "object") return null;
+
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let totalTokens = 0;
+  let cachedTokens = 0;
+  let model: string | undefined;
+
+  for (const [name, metrics] of Object.entries(models)) {
+    if (typeof metrics !== "object" || metrics === null) continue;
+    const tokens = (metrics as { tokens?: Record<string, unknown> }).tokens;
+    if (!tokens) continue;
+    inputTokens += Number(tokens.prompt ?? tokens.input ?? 0) || 0;
+    outputTokens += Number(tokens.candidates ?? 0) || 0;
+    totalTokens += Number(tokens.total ?? 0) || 0;
+    cachedTokens += Number(tokens.cached ?? 0) || 0;
+    model ??= name;
+  }
+
+  if (inputTokens === 0 && outputTokens === 0 && totalTokens === 0) {
+    return null;
+  }
+
+  return {
+    inputTokens,
+    outputTokens,
+    totalTokens: totalTokens || inputTokens + outputTokens,
+    ...(cachedTokens > 0 ? { cachedTokens } : {}),
+    ...(model ? { model } : {}),
+  };
+}
+
 // ponytail: gemini-cli가 기본으로 고르는 프리뷰 모델(gemini-3-flash 등)은
 // 무료 티어 쿼터가 극단적으로 낮다(하루 5회 수준). 안정된 구버전 모델이
 // 무료 쿼터가 더 넉넉해서 기본값으로 쓴다. GEMINI_MODEL로 언제든 바꿀 수 있음 —
@@ -27,7 +64,7 @@ const DEFAULT_MODEL = "gemini-2.0-flash";
 
 /** Google Gemini CLI. GEMINI_API_KEY 환경변수만 있으면 별도 로그인 없이 인증된다. */
 export const geminiProvider: AnalysisProvider = {
-  async run(prompt: string, repositoryPath: string): Promise<unknown> {
+  async run(prompt: string, repositoryPath: string) {
     const model = process.env.GEMINI_MODEL || DEFAULT_MODEL;
     const { stdout } = await execFileAsync(
       "npx",
@@ -43,6 +80,9 @@ export const geminiProvider: AnalysisProvider = {
         // GitHub Actions처럼 매번 새로 checkout되는 폴더는 Gemini CLI의
         // trusted-folder 검사를 통과 못 해서 헤드리스 실행이 막힌다.
         "--skip-trust",
+        // response + stats(token usage)를 한 객체로 받는다.
+        "--output-format",
+        "json",
       ],
       {
         cwd: repositoryPath,
@@ -50,7 +90,23 @@ export const geminiProvider: AnalysisProvider = {
         maxBuffer: 10 * 1024 * 1024,
       }
     );
-    return extractJson(stdout);
+
+    const envelope = JSON.parse(stdout) as {
+      response?: string;
+      stats?: unknown;
+      error?: { message?: string };
+    };
+    if (envelope.error?.message) {
+      throw new Error(envelope.error.message);
+    }
+    if (typeof envelope.response !== "string") {
+      throw new Error("Gemini JSON 출력에 response 필드가 없습니다.");
+    }
+
+    return {
+      result: extractJson(envelope.response),
+      usage: usageFromGeminiStats(envelope.stats),
+    };
   },
 };
 
@@ -63,5 +119,23 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   assert.deepStrictEqual(extractJson('그냥 텍스트 { "a": 1 } 텍스트'), { a: 1 });
   assert.throws(() => extractJson("JSON이 전혀 없는 텍스트"));
 
-  console.log("gemini extractJson self-check passed");
+  assert.deepStrictEqual(
+    usageFromGeminiStats({
+      models: {
+        "gemini-2.0-flash": {
+          tokens: { prompt: 100, candidates: 40, total: 140, cached: 10 },
+        },
+      },
+    }),
+    {
+      inputTokens: 100,
+      outputTokens: 40,
+      totalTokens: 140,
+      cachedTokens: 10,
+      model: "gemini-2.0-flash",
+    }
+  );
+  assert.strictEqual(usageFromGeminiStats(null), null);
+
+  console.log("gemini extractJson/usage self-check passed");
 }
