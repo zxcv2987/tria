@@ -416,6 +416,17 @@ const repositoryMap = {
 
 대상 저장소는 GitHub App 설치 토큰을 사용해 `target/` 디렉터리에 checkout한다.
 
+## 7.5.1 프로젝트 목록 동기화 (자동 등록)
+
+`project_configs`는 기본적으로 `/settings/projects`에서 사람이 직접 등록하지만, 등록 자체는 GitHub App 설치 상태와 동기화해 수작업을 줄인다.
+
+* `/settings/projects`의 "GitHub에서 동기화" 버튼이 `listAccessibleRepositories()`(7.4절, GitHub App이 설치된 모든 저장소 목록 조회)를 호출한다.
+* GitHub 쪽 목록에는 있지만 `project_configs`에 없는 저장소(`github_owner`+`github_repository` 기준으로 매칭)는 새 행으로 추가한다. `key`/`name`은 저장소 이름을 기본값으로 쓰고, `default_ref`는 GitHub이 응답한 default branch를 그대로 쓴다.
+* `key`가 이미 다른 저장소로 등록돼 있어 충돌하면 자동 추가하지 않고 충돌 목록으로 보고해, 사람이 `/settings/projects`에서 수동으로 키를 정하게 한다.
+* `project_configs`에는 있지만 GitHub 목록에 더 이상 없는 저장소(App 설치 해제)는 `is_active`를 `false`로 내린다.
+* 이미 `is_active=false`인 항목은 GitHub 목록에 다시 나타나도 자동으로 `true`로 되돌리지 않는다 — 사람이 의도적으로 비활성화했을 수 있으므로, 재활성화는 항상 사람이 명시적으로 한다.
+* 실시간 반영이 필요해지면(현재는 버튼을 눌러야 반영) GitHub App의 `installation_repositories` 웹훅으로 같은 매칭/반영 로직을 이벤트 기반으로 바꿀 수 있다. 처음부터 웹훅을 붙이지 않는 이유는 새 웹훅 엔드포인트와 서명 검증이라는 별도 인증 표면이 늘기 때문이다 — 버튼 방식은 기존 `listAccessibleRepositories()`를 그대로 재사용해 새 인증 표면 없이 구현할 수 있다.
+
 ## 7.6 데이터베이스
 
 저장 대상:
@@ -589,6 +600,11 @@ GitHub App Private Key
 * 기본 브랜치
 * 활성화 여부
 * 분석 프롬프트 설정
+
+동기화:
+
+* "GitHub에서 동기화" 버튼으로 GitHub App이 접근 가능한 저장소 목록과 `project_configs`를 비교해 신규/해제된 저장소를 반영한다 (7.5.1절).
+* 이 화면의 주 역할은 등록 그 자체보다 동기화 결과 확인과 보정이다 — 자동 생성된 키를 호출자 관례에 맞게 바꾸거나, 활성화 여부를 사람이 다시 조정하거나, 동기화가 한 번도 안 된 초기 상태나 키 충돌 상황을 수동으로 추가/해결하는 용도로 쓴다.
 
 ---
 
