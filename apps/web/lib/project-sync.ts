@@ -61,16 +61,19 @@ export function planProjectSync(
     // 있어서, 재설치돼도 여기서 자동으로 다시 켜지 않는다 (문서 7.5.1절).
     if (existingByRepo.has(repoId(r.owner, r.repo))) continue;
 
-    if (existingKeys.has(r.repo)) {
+    // org 없이 저장소 이름만 key로 쓰면 다른 org의 동명 저장소와 충돌하기
+    // 쉬워서, 항상 owner를 포함해 key를 만든다 (예: "org/repo").
+    const key = `${r.owner}/${r.repo}`;
+    if (existingKeys.has(key)) {
       conflicts.push({
         githubOwner: r.owner,
         githubRepository: r.repo,
-        conflictingKey: r.repo,
+        conflictingKey: key,
       });
       continue;
     }
     toInsert.push({
-      key: r.repo,
+      key,
       name: r.repo,
       githubOwner: r.owner,
       githubRepository: r.repo,
@@ -112,7 +115,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   assert.deepStrictEqual(planProjectSync([remote("new")], []), {
     toInsert: [
       {
-        key: "new",
+        key: "tria/new",
         name: "new",
         githubOwner: "tria",
         githubRepository: "new",
@@ -141,10 +144,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     planProjectSync([], [existing("4", "disabled", "disabled", false)]),
     { toInsert: [], toDeactivateIds: [], conflicts: [] },
   );
+  // key에 owner가 항상 들어가므로, 충돌은 "다른 org의 동명 저장소"가 아니라
+  // 누군가 수동으로 그 "owner/repo" 문자열을 이미 key로 써버린 경우에만 난다.
   assert.deepStrictEqual(
     planProjectSync(
       [remote("shared", "other")],
-      [existing("5", "shared", "original", true)],
+      [existing("5", "other/shared", "original", true)],
     ),
     {
       toInsert: [],
@@ -153,7 +158,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         {
           githubOwner: "other",
           githubRepository: "shared",
-          conflictingKey: "shared",
+          conflictingKey: "other/shared",
         },
       ],
     },
@@ -167,16 +172,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         remote("collision", "other"),
       ],
       [
-        existing("kept-id", "kept", "kept", true),
-        existing("removed-id", "removed", "removed", true),
-        existing("disabled-id", "disabled", "disabled", false),
-        existing("collision-id", "collision", "original", false),
+        existing("kept-id", "tria/kept", "kept", true),
+        existing("removed-id", "tria/removed", "removed", true),
+        existing("disabled-id", "tria/disabled", "disabled", false),
+        existing("collision-id", "other/collision", "original", false),
       ],
     ),
     {
       toInsert: [
         {
-          key: "new",
+          key: "tria/new",
           name: "new",
           githubOwner: "tria",
           githubRepository: "new",
@@ -188,7 +193,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         {
           githubOwner: "other",
           githubRepository: "collision",
-          conflictingKey: "collision",
+          conflictingKey: "other/collision",
         },
       ],
     },
