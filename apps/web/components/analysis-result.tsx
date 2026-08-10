@@ -7,7 +7,6 @@ import {
   helpTextClass,
   metaLabelClass,
   mutedTextClass,
-  sectionTitleClass,
 } from "@/components/ui/styles";
 
 type AnalysisResultProps = {
@@ -27,7 +26,7 @@ export function AnalysisResult({ result }: AnalysisResultProps) {
 
       {result.evidence.length > 0 && (
         <div className="flex flex-col gap-2.5">
-          <h3 className={sectionTitleClass}>관련 파일</h3>
+          <h3 className={metaLabelClass}>관련 파일</h3>
           <ul className="flex flex-col gap-3">
             {result.evidence.map((e) => (
               <li key={e.path}>
@@ -44,7 +43,7 @@ export function AnalysisResult({ result }: AnalysisResultProps) {
 
       {result.externalChecks.length > 0 && (
         <div className="flex flex-col gap-2.5">
-          <h3 className={sectionTitleClass}>다음 확인 항목</h3>
+          <h3 className={metaLabelClass}>다음 확인 항목</h3>
           <ul className={`list-disc pl-5 ${mutedTextClass}`}>
             {result.externalChecks.map((c) => (
               <li key={c}>{c}</li>
@@ -55,7 +54,7 @@ export function AnalysisResult({ result }: AnalysisResultProps) {
 
       {result.missingInformation.length > 0 && (
         <div className="flex flex-col gap-2.5">
-          <h3 className={sectionTitleClass}>부족한 정보</h3>
+          <h3 className={metaLabelClass}>부족한 정보</h3>
           <ul className={`list-disc pl-5 ${mutedTextClass}`}>
             {result.missingInformation.map((c) => (
               <li key={c}>{c}</li>

@@ -22,7 +22,10 @@ export default async function IssuesPage() {
         title="이슈 목록"
         description="프로젝트별 이슈와 분석 상태를 한눈에 확인합니다."
         actions={
-          <Link href="/settings/projects" className={btnGhostClass}>
+          <Link
+            href="/settings/projects"
+            className={`${btnGhostClass} hidden sm:inline-flex`}
+          >
             프로젝트 설정
           </Link>
         }

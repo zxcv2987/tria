@@ -81,7 +81,11 @@ export function IssueForm({ onSubmit, disabled }: IssueFormProps) {
             {asanaLoading ? "불러오는 중..." : "불러오기"}
           </button>
         </div>
-        {asanaError && <p className={errorTextClass}>{asanaError}</p>}
+        {asanaError && (
+          <p className={errorTextClass} role="alert">
+            {asanaError}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">

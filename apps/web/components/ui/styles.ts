@@ -67,10 +67,19 @@ export const btnSecondaryClass =
 export const btnGhostClass =
   "inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/10 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50";
 
+export const btnDestructiveClass =
+  "inline-flex items-center justify-center rounded-lg px-3.5 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600/20 disabled:pointer-events-none disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300 dark:focus-visible:ring-red-400/20";
+
 export const linkClass =
   "text-zinc-700 underline-offset-2 hover:underline dark:text-zinc-300";
 
 export const errorTextClass = "text-sm leading-relaxed text-red-600 dark:text-red-400";
+
+export const calloutWarningClass =
+  "rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm leading-relaxed text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200";
+
+export const emptyStateClass =
+  "py-10 text-center text-sm leading-relaxed text-zinc-500 dark:text-zinc-400";
 
 export const metricCardClass =
   "rounded-xl border border-zinc-200 bg-white px-3.5 py-3.5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none";

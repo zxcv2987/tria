@@ -12,9 +12,11 @@ import {
 } from "@/components/ui/select";
 import { useAlertDialog } from "@/components/ui/use-alert-dialog";
 import {
+  btnDestructiveClass,
   btnGhostClass,
   btnPrimaryClass,
   cardClass,
+  emptyStateClass,
   fieldLabelClass,
   helpTextClass,
   inputClass,
@@ -165,38 +167,52 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             </tr>
           </thead>
           <tbody>
-            {projects.map((p) => (
-              <tr key={p.id} className={tableRowClass}>
-                <td className={`${tableCellClass} font-mono text-xs`}>{p.key}</td>
-                <td className={tableCellClass}>{p.name}</td>
-                <td className={tableCellClass}>{p.asanaProjectValue}</td>
-                <td className={`${tableCellClass} font-mono text-xs`}>
-                  {p.githubOwner}/{p.githubRepository}
-                </td>
-                <td className={tableCellClass}>{p.defaultRef}</td>
-                <td className={tableCellClass}>
-                  <ActiveBadge active={p.isActive} />
-                </td>
-                <td className={tableCellClass}>
-                  <div className="flex gap-1">
-                    <button
-                      type="button"
-                      onClick={() => startEdit(p)}
-                      className={btnGhostClass}
-                    >
-                      수정
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(p.id)}
-                      className="inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600/10 dark:text-red-400 dark:hover:bg-red-950"
-                    >
-                      삭제
-                    </button>
-                  </div>
+            {projects.length === 0 ? (
+              <tr>
+                <td colSpan={7} className={`${tableCellClass} ${emptyStateClass}`}>
+                  등록된 프로젝트가 없습니다. 아래에서 첫 매핑을 추가하세요.
                 </td>
               </tr>
-            ))}
+            ) : (
+              projects.map((p) => (
+                <tr key={p.id} className={tableRowClass}>
+                  <td className={`${tableCellClass} whitespace-nowrap font-mono text-xs`}>
+                    {p.key}
+                  </td>
+                  <td className={`${tableCellClass} whitespace-nowrap`}>{p.name}</td>
+                  <td className={`${tableCellClass} whitespace-nowrap`}>
+                    {p.asanaProjectValue}
+                  </td>
+                  <td className={`${tableCellClass} whitespace-nowrap font-mono text-xs`}>
+                    {p.githubOwner}/{p.githubRepository}
+                  </td>
+                  <td className={`${tableCellClass} whitespace-nowrap`}>
+                    {p.defaultRef}
+                  </td>
+                  <td className={tableCellClass}>
+                    <ActiveBadge active={p.isActive} />
+                  </td>
+                  <td className={tableCellClass}>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => startEdit(p)}
+                        className={btnGhostClass}
+                      >
+                        수정
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(p.id)}
+                        className={`${btnDestructiveClass} px-2 py-1.5`}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -216,7 +232,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
           )}
         </div>
 
-        <p className="text-xs text-zinc-500">
+        <p className={helpTextClass}>
           여기 등록한다고 자동으로 이벤트가 오지 않습니다. Asana 프로젝트
           GID로 웹훅을 별도로 등록해야 실제로 연결됩니다.
         </p>

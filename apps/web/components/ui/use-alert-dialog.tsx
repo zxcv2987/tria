@@ -25,6 +25,7 @@ type ConfirmState = {
   title: string;
   description: string;
   destructive?: boolean;
+  confirmLabel?: string;
   resolve: (ok: boolean) => void;
 };
 
@@ -54,7 +55,11 @@ export function useAlertDialog() {
   const confirm = useCallback(
     (
       description: string,
-      options?: { title?: string; destructive?: boolean },
+      options?: {
+        title?: string;
+        destructive?: boolean;
+        confirmLabel?: string;
+      },
     ) => {
       return new Promise<boolean>((resolve) => {
         const next: ConfirmState = {
@@ -62,6 +67,9 @@ export function useAlertDialog() {
           title: options?.title ?? "확인",
           description,
           destructive: options?.destructive,
+          confirmLabel:
+            options?.confirmLabel ??
+            (options?.destructive ? "삭제" : "확인"),
           resolve,
         };
         stateRef.current = next;
@@ -101,7 +109,9 @@ export function useAlertDialog() {
             }
             onClick={() => settle(true)}
           >
-            확인
+            {state?.kind === "confirm"
+              ? (state.confirmLabel ?? "확인")
+              : "확인"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

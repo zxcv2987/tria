@@ -14,6 +14,7 @@ import {
 import { useAlertDialog } from "@/components/ui/use-alert-dialog";
 import {
   bodyTextClass,
+  btnDestructiveClass,
   btnPrimaryClass,
   btnSecondaryClass,
   cardClass,
@@ -43,7 +44,9 @@ function Field({ label, value }: { label: string; value: string | null }) {
     <div className="flex flex-col gap-1.5">
       <h3 className={metaLabelClass}>{label}</h3>
       <p className={`whitespace-pre-wrap ${bodyTextClass}`}>
-        {value?.trim() ? value : "-"}
+        {value?.trim() ? value : (
+          <span className="text-zinc-400 dark:text-zinc-500">—</span>
+        )}
       </p>
     </div>
   );
@@ -60,7 +63,9 @@ function StringList({
     <div className="flex flex-col gap-2">
       <h3 className={metaLabelClass}>{label}</h3>
       {items.length === 0 ? (
-        <p className={helpTextClass}>-</p>
+        <p className={helpTextClass}>
+          <span className="text-zinc-400 dark:text-zinc-500">—</span>
+        </p>
       ) : (
         <ul className={`list-disc pl-5 ${mutedTextClass}`}>
           {items.map((item) => (
@@ -192,7 +197,7 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
         <button
           type="button"
           onClick={handleDelete}
-          className="inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600/10 dark:text-red-400 dark:hover:bg-red-950"
+          className={btnDestructiveClass}
         >
           삭제
         </button>
@@ -248,7 +253,9 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
             <div className="flex flex-col gap-2">
               <h3 className={metaLabelClass}>관련 파일</h3>
               {evidence.length === 0 ? (
-                <p className={helpTextClass}>-</p>
+                <p className={helpTextClass}>
+                  <span className="text-zinc-400 dark:text-zinc-500">—</span>
+                </p>
               ) : (
                 <ul className="flex flex-col gap-3">
                   {evidence.map((e) => (
@@ -278,7 +285,9 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
                     ))}
                 </ul>
               ) : (
-                <p className={helpTextClass}>-</p>
+                <p className={helpTextClass}>
+                  <span className="text-zinc-400 dark:text-zinc-500">—</span>
+                </p>
               )}
             </div>
 
@@ -309,7 +318,9 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
                   {run.workflowRunUrl}
                 </a>
               ) : (
-                <p className={helpTextClass}>-</p>
+                <p className={helpTextClass}>
+                  <span className="text-zinc-400 dark:text-zinc-500">—</span>
+                </p>
               )}
             </div>
 
@@ -321,21 +332,24 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
         )}
       </section>
 
-      <section className={`${cardClass} flex flex-col gap-3.5`}>
-        <h2 className={sectionTitleClass}>분석 피드백</h2>
-        <div className="flex flex-wrap gap-2">
-          {FEEDBACK_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => handleFeedback(opt.value)}
-              className={btnSecondaryClass}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </section>
+      {run ? (
+        <section className={`${cardClass} flex flex-col gap-3.5`}>
+          <h2 className={sectionTitleClass}>분석 피드백</h2>
+          <p className={helpTextClass}>이 분석이 도움이 됐는지 알려주세요.</p>
+          <div className="flex flex-wrap gap-2">
+            {FEEDBACK_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => handleFeedback(opt.value)}
+                className={btnSecondaryClass}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
