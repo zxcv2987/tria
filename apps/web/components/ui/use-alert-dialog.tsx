@@ -122,7 +122,9 @@ export function useAlertDialog() {
           >
             {state?.title}
           </AlertDialogTitle>
-          <AlertDialogDescription className={bodyTextClass}>
+          <AlertDialogDescription
+            className={cn(bodyTextClass, "whitespace-pre-line")}
+          >
             {state?.description}
           </AlertDialogDescription>
         </AlertDialogHeader>

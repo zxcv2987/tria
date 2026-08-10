@@ -33,6 +33,17 @@ const REPO_NONE = "__none__";
 
 type RepoOption = { owner: string; repo: string };
 
+type SyncResponse = {
+  inserted: (Omit<ProjectConfig, "isActive" | "analysisPrompt">)[];
+  deactivatedIds: string[];
+  conflicts: {
+    githubOwner: string;
+    githubRepository: string;
+    conflictingKey: string;
+  }[];
+  errors: { githubOwner: string; githubRepository: string; message: string }[];
+};
+
 type Props = {
   initialProjects: ProjectConfig[];
 };
@@ -54,6 +65,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
   const [form, setForm] = useState(emptyForm);
   const [repoOptions, setRepoOptions] = useState<RepoOption[]>([]);
   const [repoState, setRepoState] = useState<"loading" | "ready" | "error">("loading");
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     fetch("/api/github/available-repos")
@@ -144,9 +156,69 @@ export function ProjectConfigForm({ initialProjects }: Props) {
     }
   }
 
+  async function handleSync() {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/projects/sync", { method: "POST" });
+      const data = (await res.json()) as SyncResponse & { error?: string };
+      if (!res.ok) throw new Error(data.error);
+
+      const deactivatedIds = new Set(data.deactivatedIds);
+      setProjects((prev) => [
+        ...prev.map((project) =>
+          deactivatedIds.has(project.id)
+            ? { ...project, isActive: false }
+            : project,
+        ),
+        ...data.inserted.map((project) => ({
+          ...project,
+          isActive: true,
+          analysisPrompt: "",
+        })),
+      ]);
+
+      let message = `${data.inserted.length}개 추가, ${data.deactivatedIds.length}개 비활성화`;
+      if (data.conflicts.length > 0) {
+        const conflictSummary = data.conflicts
+          .map(
+            (conflict) =>
+              `${conflict.githubOwner}/${conflict.githubRepository} (키 "${conflict.conflictingKey}" 중복)`,
+          )
+          .join(", ");
+        message += `\n${data.conflicts.length}개 충돌(수동 처리 필요): ${conflictSummary}`;
+      }
+      if (data.errors.length > 0) {
+        const errorSummary = data.errors
+          .map((e) => `${e.githubOwner}/${e.githubRepository} (${e.message})`)
+          .join(", ");
+        message += `\n${data.errors.length}개 추가 실패: ${errorSummary}`;
+      }
+      await alert(message, {
+        variant: data.conflicts.length > 0 || data.errors.length > 0 ? "error" : undefined,
+      });
+    } catch (err) {
+      await alert(
+        err instanceof Error ? err.message : "동기화 중 오류가 발생했습니다.",
+        { variant: "error" },
+      );
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_420px]">
       {dialog}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={syncing}
+        onClick={handleSync}
+        className="self-start"
+      >
+        {syncing ? "동기화 중..." : "GitHub에서 동기화"}
+      </Button>
       <div className="space-y-2 md:hidden">
         <ConsoleSectionHeader className="border border-console-line bg-console-muted p-3" title="저장소 매핑 스트립" description="접수 키와 조사 저장소를 관리합니다." />
         {projects.length === 0 ? <p className="border border-dashed border-border p-6 text-center text-sm text-muted-foreground">등록된 프로젝트가 없습니다.</p> : projects.map((p) => (
