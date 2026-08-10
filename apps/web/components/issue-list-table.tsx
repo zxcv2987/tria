@@ -1,13 +1,13 @@
 "use client";
 
+import { AnalysisStatusBadge, ResultBadge } from "@/components/status-badges";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PaperStrip } from "@/components/ui/workbench";
+import { Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
 import { ANALYSIS_STATUS_LABEL, RESULT_TYPE_LABEL, formatDateTime, getLatestRun, getProjectName, type AnalysisRun, type Issue, type ProjectConfig } from "./mock-data";
-import { AnalysisStatusBadge, ResultBadge } from "@/components/status-badges";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { PaperStrip } from "@/components/ui/workbench";
 
 const ALL = "ALL";
 

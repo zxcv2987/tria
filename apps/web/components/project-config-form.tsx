@@ -209,17 +209,20 @@ export function ProjectConfigForm({ initialProjects }: Props) {
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_420px]">
       {dialog}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        disabled={syncing}
-        onClick={handleSync}
-        className="self-start"
-      >
-        {syncing ? "동기화 중..." : "GitHub에서 동기화"}
-      </Button>
-      <div className="space-y-2 md:hidden">
+      <div className="min-w-0 space-y-2">
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={syncing}
+            onClick={handleSync}
+            className="h-11 w-full sm:h-7 sm:w-auto"
+          >
+            {syncing ? "동기화 중..." : "GitHub에서 동기화"}
+          </Button>
+        </div>
+        <div className="space-y-2 md:hidden">
         <ConsoleSectionHeader className="border border-console-line bg-console-muted p-3" title="저장소 매핑 스트립" description="접수 키와 조사 저장소를 관리합니다." />
         {projects.length === 0 ? <p className="border border-dashed border-border p-6 text-center text-sm text-muted-foreground">등록된 프로젝트가 없습니다.</p> : projects.map((p) => (
           <PaperStrip asChild key={p.id} className="p-4"><article>
@@ -229,8 +232,8 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             <div className="mt-4 grid grid-cols-2 gap-2"><Button className="h-11" type="button" variant="outline" onClick={() => startEdit(p)}>수정</Button><Button className="h-11" type="button" variant="destructive" onClick={() => handleDelete(p.id)}>삭제</Button></div>
           </article></PaperStrip>
         ))}
-      </div>
-      <div className={`${tableWrapClass} hidden min-h-[420px] min-w-0 md:block`}>
+        </div>
+        <div className={`${tableWrapClass} hidden min-h-[420px] min-w-0 md:block`}>
         <table className={`${tableClass} min-w-[48rem]`}>
           <caption className="border-b border-console-line bg-console-muted px-3 py-3 text-left">
             <span className="block text-sm font-semibold text-white">저장소 매핑 스트립</span>
@@ -297,6 +300,7 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       <form
