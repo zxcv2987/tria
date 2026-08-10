@@ -23,7 +23,12 @@ export default async function IssuesPage() {
         title="이슈 목록"
         description="프로젝트별 이슈와 분석 상태를 한눈에 확인합니다."
         actions={
-          <Button variant="ghost" size="sm" asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hidden sm:inline-flex"
+            asChild
+          >
             <Link href="/settings/projects">프로젝트 설정</Link>
           </Button>
         }

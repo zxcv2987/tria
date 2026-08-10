@@ -58,5 +58,8 @@ export const linkClass = "text-primary underline-offset-2 hover:underline";
 
 export const errorTextClass = "text-sm leading-relaxed text-destructive";
 
+export const emptyStateClass =
+  "py-10 text-center text-sm leading-relaxed text-muted-foreground";
+
 export const metricCardClass =
   "rounded-xl border border-border bg-card px-3.5 py-3.5 shadow-xs dark:shadow-none";

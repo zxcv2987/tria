@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
+  emptyStateClass,
   helpTextClass,
   linkClass,
   metricCardClass,
@@ -217,12 +218,15 @@ export function IssueListTable({ issues, runs, projects }: Props) {
         {RESULT_TILES.map(renderTile)}
       </div>
 
-      <div className="flex flex-wrap gap-2.5">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
         <Select
           value={project || ALL}
           onValueChange={(value) => setProject(value === ALL ? "" : value)}
         >
-          <SelectTrigger className="h-9 min-w-[10rem]" aria-label="프로젝트 필터">
+          <SelectTrigger
+            className="h-9 w-full sm:min-w-[10rem] sm:w-auto"
+            aria-label="프로젝트 필터"
+          >
             <SelectValue placeholder="전체 프로젝트" />
           </SelectTrigger>
           <SelectContent position="popper">
@@ -241,7 +245,10 @@ export function IssueListTable({ issues, runs, projects }: Props) {
             setAnalysisStatus(value === ALL ? "" : value)
           }
         >
-          <SelectTrigger className="h-9 min-w-[10rem]" aria-label="분석 상태 필터">
+          <SelectTrigger
+            className="h-9 w-full sm:min-w-[10rem] sm:w-auto"
+            aria-label="분석 상태 필터"
+          >
             <SelectValue placeholder="전체 분석 상태" />
           </SelectTrigger>
           <SelectContent position="popper">
@@ -258,7 +265,10 @@ export function IssueListTable({ issues, runs, projects }: Props) {
           value={resultType || ALL}
           onValueChange={(value) => setResultType(value === ALL ? "" : value)}
         >
-          <SelectTrigger className="h-9 min-w-[10rem]" aria-label="AI 판정 필터">
+          <SelectTrigger
+            className="h-9 w-full sm:min-w-[10rem] sm:w-auto"
+            aria-label="AI 판정 필터"
+          >
             <SelectValue placeholder="전체 AI 판정" />
           </SelectTrigger>
           <SelectContent position="popper">
@@ -275,7 +285,8 @@ export function IssueListTable({ issues, runs, projects }: Props) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="제목 검색"
-          className="h-9 min-w-[12rem] flex-1 py-0"
+          aria-label="제목 검색"
+          className="h-9 w-full py-0 sm:min-w-[12rem] sm:flex-1"
         />
       </div>
 
@@ -305,8 +316,10 @@ export function IssueListTable({ issues, runs, projects }: Props) {
           );
         })}
         {filtered.length === 0 && (
-          <p className={`${helpTextClass} py-10 text-center`}>
-            조건에 맞는 이슈가 없습니다.
+          <p className={emptyStateClass}>
+            {issues.length === 0
+              ? "아직 등록된 이슈가 없습니다. Asana 웹훅으로 이슈가 들어오면 여기에 표시됩니다."
+              : "조건에 맞는 이슈가 없습니다. 필터를 바꿔 보세요."}
           </p>
         )}
       </div>
@@ -357,13 +370,17 @@ export function IssueListTable({ issues, runs, projects }: Props) {
                     )}
                   </td>
                   <td className={tableCellClass}>
-                    {run ? <AnalysisStatusBadge status={run.status} /> : "-"}
+                    {run ? (
+                      <AnalysisStatusBadge status={run.status} />
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </td>
                   <td className={tableCellClass}>
                     {run?.resultType ? (
                       <ResultBadge result={run.resultType} />
                     ) : (
-                      "-"
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </td>
                   <td className={`${tableCellClass} whitespace-nowrap text-muted-foreground`}>
@@ -379,9 +396,11 @@ export function IssueListTable({ issues, runs, projects }: Props) {
               <tr>
                 <td
                   colSpan={7}
-                  className={`${tableCellClass} py-10 text-center text-muted-foreground`}
+                  className={`${tableCellClass} ${emptyStateClass}`}
                 >
-                  조건에 맞는 이슈가 없습니다.
+                  {issues.length === 0
+                    ? "아직 등록된 이슈가 없습니다. Asana 웹훅으로 이슈가 들어오면 여기에 표시됩니다."
+                    : "조건에 맞는 이슈가 없습니다. 필터를 바꿔 보세요."}
                 </td>
               </tr>
             )}

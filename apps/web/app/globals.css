@@ -135,11 +135,15 @@ body {
 
 p,
 li,
-label,
+label {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
 td,
 th {
   word-break: keep-all;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 code,

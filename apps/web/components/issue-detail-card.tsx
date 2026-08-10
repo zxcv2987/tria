@@ -50,7 +50,11 @@ function Field({ label, value }: { label: string; value: string | null }) {
     <div className="flex flex-col gap-1.5">
       <h3 className={metaLabelClass}>{label}</h3>
       <p className={`whitespace-pre-wrap ${bodyTextClass}`}>
-        {value?.trim() ? normalizeNewlines(value) : "-"}
+        {value?.trim() ? (
+          normalizeNewlines(value)
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
       </p>
     </div>
   );
@@ -67,7 +71,9 @@ function StringList({
     <div className="flex flex-col gap-2">
       <h3 className={metaLabelClass}>{label}</h3>
       {items.length === 0 ? (
-        <p className={helpTextClass}>-</p>
+        <p className={helpTextClass}>
+          <span className="text-muted-foreground">—</span>
+        </p>
       ) : (
         <ul className={`list-disc pl-5 ${mutedTextClass}`}>
           {items.map((item) => (
@@ -179,11 +185,7 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
     <div className="flex flex-col gap-6">
       {dialog}
       <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          onClick={handleReanalyze}
-          disabled={isReanalyzing}
-        >
+        <Button type="button" onClick={handleReanalyze} disabled={isReanalyzing}>
           {isReanalyzing ? "재분석 중..." : "재분석"}
         </Button>
         {issue.externalUrl && (
@@ -230,7 +232,9 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
             <div className="flex flex-col gap-2">
               <h3 className={metaLabelClass}>관련 파일</h3>
               {evidence.length === 0 ? (
-                <p className={helpTextClass}>-</p>
+                <p className={helpTextClass}>
+                  <span className="text-muted-foreground">—</span>
+                </p>
               ) : (
                 <ul className="flex flex-col gap-3">
                   {evidence.map((e) => (
@@ -260,7 +264,9 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
                     ))}
                 </ul>
               ) : (
-                <p className={helpTextClass}>-</p>
+                <p className={helpTextClass}>
+                  <span className="text-muted-foreground">—</span>
+                </p>
               )}
             </div>
 
@@ -310,7 +316,9 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
                   {run.workflowRunUrl}
                 </a>
               ) : (
-                <p className={helpTextClass}>-</p>
+                <p className={helpTextClass}>
+                  <span className="text-muted-foreground">—</span>
+                </p>
               )}
             </div>
 
@@ -363,21 +371,24 @@ export function IssueDetailCard({ issue, run, analysisResult }: Props) {
         </div>
       </details>
 
-      <section className={`${cardClass} flex flex-col gap-3.5`}>
-        <h2 className={sectionTitleClass}>분석 피드백</h2>
-        <div className="flex flex-wrap gap-2">
-          {FEEDBACK_OPTIONS.map((opt) => (
-            <Button
-              key={opt.value}
-              type="button"
-              variant="outline"
-              onClick={() => handleFeedback(opt.value)}
-            >
-              {opt.label}
-            </Button>
-          ))}
-        </div>
-      </section>
+      {run ? (
+        <section className={`${cardClass} flex flex-col gap-3.5`}>
+          <h2 className={sectionTitleClass}>분석 피드백</h2>
+          <p className={helpTextClass}>이 분석이 도움이 됐는지 알려주세요.</p>
+          <div className="flex flex-wrap gap-2">
+            {FEEDBACK_OPTIONS.map((opt) => (
+              <Button
+                key={opt.value}
+                type="button"
+                variant="outline"
+                onClick={() => handleFeedback(opt.value)}
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

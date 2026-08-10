@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   cardClass,
+  emptyStateClass,
   fieldLabelClass,
   helpTextClass,
   sectionTitleClass,
@@ -153,39 +154,54 @@ export function ProjectConfigForm({ initialProjects }: Props) {
             </tr>
           </thead>
           <tbody>
-            {projects.map((p) => (
-              <tr key={p.id} className={tableRowClass}>
-                <td className={`${tableCellClass} font-mono text-xs`}>{p.key}</td>
-                <td className={tableCellClass}>{p.name}</td>
-                <td className={`${tableCellClass} font-mono text-xs`}>
-                  {p.githubOwner}/{p.githubRepository}
-                </td>
-                <td className={tableCellClass}>{p.defaultRef}</td>
-                <td className={tableCellClass}>
-                  <ActiveBadge active={p.isActive} />
-                </td>
-                <td className={tableCellClass}>
-                  <div className="flex gap-1">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => startEdit(p)}
-                    >
-                      수정
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(p.id)}
-                    >
-                      삭제
-                    </Button>
-                  </div>
+            {projects.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={6}
+                  className={`${tableCellClass} ${emptyStateClass}`}
+                >
+                  등록된 프로젝트가 없습니다. 아래에서 첫 매핑을 추가하세요.
                 </td>
               </tr>
-            ))}
+            ) : (
+              projects.map((p) => (
+                <tr key={p.id} className={tableRowClass}>
+                  <td className={`${tableCellClass} whitespace-nowrap font-mono text-xs`}>
+                    {p.key}
+                  </td>
+                  <td className={`${tableCellClass} whitespace-nowrap`}>{p.name}</td>
+                  <td className={`${tableCellClass} whitespace-nowrap font-mono text-xs`}>
+                    {p.githubOwner}/{p.githubRepository}
+                  </td>
+                  <td className={`${tableCellClass} whitespace-nowrap`}>
+                    {p.defaultRef}
+                  </td>
+                  <td className={tableCellClass}>
+                    <ActiveBadge active={p.isActive} />
+                  </td>
+                  <td className={tableCellClass}>
+                    <div className="flex gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => startEdit(p)}
+                      >
+                        수정
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(p.id)}
+                      >
+                        삭제
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
